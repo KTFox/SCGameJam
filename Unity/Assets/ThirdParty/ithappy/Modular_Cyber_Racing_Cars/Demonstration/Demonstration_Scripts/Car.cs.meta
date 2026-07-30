@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 89ca9513d8d68d246ac8af10d9c595dc
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 355800
+  packageName: Modular Cyber Racing Cars - Low Poly 3D Models
+  packageVersion: 1.1
+  assetPath: Assets/ithappy/Modular_Cyber_Racing_Cars/Demonstration/Demonstration_Scripts/Car.cs
+  uploadId: 919708
