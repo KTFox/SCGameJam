@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 5dc128f88186e4940867e395904443d1
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 59092
+  packageName: Find Reference 2
+  packageVersion: 2.6.19
+  assetPath: Assets/FindReference2/Editor/AssemblyInfo.cs
+  uploadId: 946508

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 774033b9310864d76a6dbde1cb76b96e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 59092
+  packageName: Find Reference 2
+  packageVersion: 2.6.19
+  assetPath: Assets/FindReference2/Editor/Script/UI/FR2_ToolbarButton.cs
+  uploadId: 946508

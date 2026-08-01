@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f3e49e2a51ba1445e8c372a3dfb2e4a8
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 59092
+  packageName: Find Reference 2
+  packageVersion: 2.6.19
+  assetPath: Assets/FindReference2/Editor/Script/TreeUI/FR2_RefDrawer.Data.cs
+  uploadId: 946508

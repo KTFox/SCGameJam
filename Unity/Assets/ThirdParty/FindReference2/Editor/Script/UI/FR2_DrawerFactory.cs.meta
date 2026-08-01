@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: b10f15a0a68ee460a8cff83cd01b5363
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 59092
+  packageName: Find Reference 2
+  packageVersion: 2.6.19
+  assetPath: Assets/FindReference2/Editor/Script/UI/FR2_DrawerFactory.cs
+  uploadId: 946508
