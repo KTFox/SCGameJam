@@ -47,7 +47,7 @@ namespace Supercent.Rendering.Shadow.Editor
 
                 List<PlanarShadow> combinedPlanarShadows = new List<PlanarShadow>();
 
-                PlanarShadow[] shadows = FindObjectsByType<PlanarShadow>();
+                PlanarShadow[] shadows = FindObjectsByType<PlanarShadow>(FindObjectsSortMode.None);
                 combinedPlanarShadows.AddRange(shadows);
 
                 int totalShadows = combinedPlanarShadows.Count;
