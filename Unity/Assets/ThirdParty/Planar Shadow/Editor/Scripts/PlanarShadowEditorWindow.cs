@@ -173,7 +173,7 @@ namespace Supercent.Rendering.Shadow.Editor
 
             if (GUILayout.Button("Auto Set Shadow Direction", GUILayout.Width(200)))
             {
-                foreach (Light light in FindObjectsOfType<Light>())
+                foreach (Light light in FindObjectsByType<Light>())
                 {
                     if (light.type == LightType.Directional)
                     {
@@ -194,9 +194,9 @@ namespace Supercent.Rendering.Shadow.Editor
 
             GUILayout.Space(10);
 
-            if (EditorGUI.EndChangeCheck()) 
+            if (EditorGUI.EndChangeCheck())
             {
-                ApplyMaterialChanges(); 
+                ApplyMaterialChanges();
             }
 
             if (IsMaterialChanged())
@@ -311,8 +311,8 @@ namespace Supercent.Rendering.Shadow.Editor
             _meshRendererObjects.Clear();
             _skinnedMeshRendererObjects.Clear();
 
-            MeshRenderer[] meshRenderers = FindObjectsOfType<MeshRenderer>(true).Where(mR => mR.GetComponent<TMP_Text>() == null).ToArray();
-            SkinnedMeshRenderer[] skinnedMeshRenderers = FindObjectsOfType<SkinnedMeshRenderer>(true).Where(mR => mR.GetComponent<TMP_Text>() == null).ToArray();
+            MeshRenderer[] meshRenderers = FindObjectsByType<MeshRenderer>().Where(mR => mR.GetComponent<TMP_Text>() == null).ToArray();
+            SkinnedMeshRenderer[] skinnedMeshRenderers = FindObjectsByType<SkinnedMeshRenderer>().Where(mR => mR.GetComponent<TMP_Text>() == null).ToArray();
 
             foreach (var renderer in meshRenderers)
             {
