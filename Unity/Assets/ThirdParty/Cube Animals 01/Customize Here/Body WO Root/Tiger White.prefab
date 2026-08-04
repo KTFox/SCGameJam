@@ -1,0 +1,222 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2903516585250277882
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2771900713340795719}
+  m_Layer: 0
+  m_Name: + Main
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2771900713340795719
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2903516585250277882}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.50000006, y: 0.5, z: 0.4999999, w: 0.5}
+  m_LocalPosition: {x: 0.5634307, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1924586131712023166}
+  m_Father: {fileID: 1131413343044131804}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1183446253583489767
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2771900713340795719}
+    m_Modifications:
+    - target: {fileID: 113190700807002659, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_Name
+      value: Tiger Tail White
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c00cf3448ba691c4d9feae497975f843, type: 3}
+--- !u!4 &1924586131712023166 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 781923170776694937, guid: c00cf3448ba691c4d9feae497975f843,
+    type: 3}
+  m_PrefabInstance: {fileID: 1183446253583489767}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &6161583799341205016
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_Name
+      value: Tiger White
+      objectReference: {fileID: 0}
+    - target: {fileID: 5111843534271879067, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: c6b4a12b85dd980489d97cbb6816a122, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 6499188634703404484, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2771900713340795719}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6694695d40663d64ca1d4249f9514717,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6495854462795298568}
+  m_SourcePrefab: {fileID: 100100000, guid: 6694695d40663d64ca1d4249f9514717, type: 3}
+--- !u!4 &1131413343044131804 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6499188634703404484, guid: 6694695d40663d64ca1d4249f9514717,
+    type: 3}
+  m_PrefabInstance: {fileID: 6161583799341205016}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6432052862695897929 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 6694695d40663d64ca1d4249f9514717,
+    type: 3}
+  m_PrefabInstance: {fileID: 6161583799341205016}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &6495854462795298568
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6432052862695897929}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 4fd3cdd221d2e304abcfb26f61cf4b89, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
