@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SCJam.LevelSystem
 {
     /// <summary>
-    /// Editor commands for validating <see cref="LevelDefinition"/> assets.
+    /// Editor commands for validating <see cref="LevelSO"/> assets.
     /// </summary>
     public static class LevelDefinitionValidationMenu
     {
@@ -17,7 +17,7 @@ namespace SCJam.LevelSystem
         [MenuItem(VALIDATE_SELECTED_MENU, false, 2000)]
         private static void ValidateSelectedLevelDefinition()
         {
-            LevelDefinition definition = Selection.activeObject as LevelDefinition;
+            LevelSO definition = Selection.activeObject as LevelSO;
             if (definition == null)
             {
                 Debug.LogWarning("[LevelValidation] Select a LevelDefinition asset first.");
@@ -30,7 +30,7 @@ namespace SCJam.LevelSystem
         [MenuItem(VALIDATE_SELECTED_MENU, true)]
         private static bool ValidateSelectedLevelDefinitionValidate()
         {
-            return Selection.activeObject is LevelDefinition;
+            return Selection.activeObject is LevelSO;
         }
     }
 }

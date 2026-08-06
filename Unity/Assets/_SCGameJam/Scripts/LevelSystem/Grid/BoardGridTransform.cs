@@ -14,7 +14,7 @@ namespace SCJam.LevelSystem
 
         [SerializeField]
         [Tooltip("Optional level definition used to initialize converter metrics.")]
-        private LevelDefinition _levelDefinition;
+        private LevelSO _levelDefinition;
 
         [SerializeField]
         [Min(1)]
@@ -41,7 +41,7 @@ namespace SCJam.LevelSystem
         /// <summary>
         /// Gets the optional authored level definition used for converter metrics.
         /// </summary>
-        public LevelDefinition LevelDefinition => _levelDefinition;
+        public LevelSO LevelDefinition => _levelDefinition;
 
         /// <summary>
         /// Gets the active coordinate converter, creating it on demand.
@@ -79,7 +79,7 @@ namespace SCJam.LevelSystem
         /// Rebuilds the converter from an authored level definition.
         /// </summary>
         /// <param name="levelDefinition">Level definition supplying grid metrics.</param>
-        public void Configure(LevelDefinition levelDefinition)
+        public void Configure(LevelSO levelDefinition)
         {
             _levelDefinition = levelDefinition;
             if (levelDefinition != null)

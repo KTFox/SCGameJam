@@ -14,7 +14,7 @@ namespace SCJam.LevelSystem
             new Dictionary<string, VehicleRuntimeState>();
         private readonly IReadOnlyList<VehicleRuntimeState> _vehiclesReadOnly;
 
-        private LevelDefinition _definition;
+        private LevelSO _definition;
         private VehicleOccupancyGrid _occupancyGrid;
         private LevelLifecycleState _lifecycleState = LevelLifecycleState.None;
         private bool _isInitialized;
@@ -30,7 +30,7 @@ namespace SCJam.LevelSystem
         /// <summary>
         /// Gets the immutable source level definition.
         /// </summary>
-        public LevelDefinition Definition => _definition;
+        public LevelSO Definition => _definition;
 
         /// <summary>
         /// Gets the current lifecycle state.
@@ -61,7 +61,7 @@ namespace SCJam.LevelSystem
         /// <param name="issues">Validation issues from the attempt.</param>
         /// <returns>True when initialization succeeds.</returns>
         public static bool TryInitialize(
-            LevelDefinition definition,
+            LevelSO definition,
             out LevelRuntimeState runtimeState,
             out IReadOnlyList<LevelValidationIssue> issues)
         {
@@ -92,7 +92,7 @@ namespace SCJam.LevelSystem
         /// <param name="issues">Validation or initialization issues.</param>
         /// <returns>True when initialization succeeds.</returns>
         public bool TryReinitialize(
-            LevelDefinition definition,
+            LevelSO definition,
             out IReadOnlyList<LevelValidationIssue> issues)
         {
             Dispose();
@@ -191,7 +191,7 @@ namespace SCJam.LevelSystem
         }
 
         private bool InitializeInternal(
-            LevelDefinition definition,
+            LevelSO definition,
             out IReadOnlyList<LevelValidationIssue> issues)
         {
             var localIssues = new List<LevelValidationIssue>();

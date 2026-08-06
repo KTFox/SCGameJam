@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SCJam.LevelSystem
 {
     /// <summary>
-    /// Validates authored <see cref="LevelDefinition"/> assets without entering play mode.
+    /// Validates authored <see cref="LevelSO"/> assets without entering play mode.
     /// Reuses footprint and occupancy rules used at runtime. Does not mutate the level.
     /// </summary>
     public static class LevelDefinitionValidator
@@ -14,7 +14,7 @@ namespace SCJam.LevelSystem
         /// </summary>
         /// <param name="definition">Level definition to validate.</param>
         /// <returns>Validation result containing all issues found.</returns>
-        public static LevelValidationResult Validate(LevelDefinition definition)
+        public static LevelValidationResult Validate(LevelSO definition)
         {
             var issues = new List<LevelValidationIssue>();
 
@@ -38,7 +38,7 @@ namespace SCJam.LevelSystem
         /// </summary>
         /// <param name="definition">Level definition to validate.</param>
         /// <returns>Validation result.</returns>
-        public static LevelValidationResult ValidateAndLog(LevelDefinition definition)
+        public static LevelValidationResult ValidateAndLog(LevelSO definition)
         {
             LevelValidationResult result = Validate(definition);
             LogIssues(definition, result);
@@ -50,7 +50,7 @@ namespace SCJam.LevelSystem
         /// </summary>
         /// <param name="definition">Validated level definition.</param>
         /// <param name="result">Validation result.</param>
-        public static void LogIssues(LevelDefinition definition, LevelValidationResult result)
+        public static void LogIssues(LevelSO definition, LevelValidationResult result)
         {
             if (result == null)
             {
@@ -88,7 +88,7 @@ namespace SCJam.LevelSystem
             }
         }
 
-        private static void ValidateGridMetrics(LevelDefinition definition, List<LevelValidationIssue> issues)
+        private static void ValidateGridMetrics(LevelSO definition, List<LevelValidationIssue> issues)
         {
             if (definition.GridWidth <= 0)
             {
@@ -116,7 +116,7 @@ namespace SCJam.LevelSystem
         }
 
         private static void ValidateVehicles(
-            LevelDefinition definition,
+            LevelSO definition,
             List<Vector2Int> footprintBuffer,
             List<LevelValidationIssue> issues)
         {
@@ -154,7 +154,7 @@ namespace SCJam.LevelSystem
         }
 
         private static void ValidatePlacement(
-            LevelDefinition definition,
+            LevelSO definition,
             VehiclePlacementDefinition placement,
             HashSet<string> seenIds,
             VehicleOccupancyGrid occupancy,

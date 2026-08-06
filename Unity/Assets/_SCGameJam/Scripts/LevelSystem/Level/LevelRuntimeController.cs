@@ -11,7 +11,7 @@ namespace SCJam.LevelSystem
     {
         [SerializeField]
         [Tooltip("Authored level definition to load.")]
-        private LevelDefinition _levelDefinition;
+        private LevelSO _levelDefinition;
 
         [SerializeField]
         [Tooltip("Board grid transform used for coordinate conversion and view parenting.")]
@@ -32,7 +32,7 @@ namespace SCJam.LevelSystem
         /// <summary>
         /// Gets the assigned level definition.
         /// </summary>
-        public LevelDefinition LevelDefinition => _levelDefinition;
+        public LevelSO LevelDefinition => _levelDefinition;
 
         /// <summary>
         /// Gets the active runtime state, if initialized.
@@ -86,7 +86,7 @@ namespace SCJam.LevelSystem
         /// </summary>
         /// <param name="definition">Level definition to load.</param>
         /// <returns>True when initialization succeeds.</returns>
-        public bool TryLoadLevel(LevelDefinition definition)
+        public bool TryLoadLevel(LevelSO definition)
         {
             UnloadLevel();
 

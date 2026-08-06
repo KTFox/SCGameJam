@@ -16,7 +16,7 @@ namespace SCJam.LevelSystem
         private LevelRuntimeController _runtimeController;
 
         [SerializeField]
-        private LevelDefinition _levelDefinitionOverride;
+        private LevelSO _levelDefinitionOverride;
 
         [SerializeField]
         private bool _drawGrid = true;
@@ -66,7 +66,7 @@ namespace SCJam.LevelSystem
                 return;
             }
 
-            LevelDefinition definition = ResolveDefinition();
+            LevelSO definition = ResolveDefinition();
             int width = definition != null ? definition.GridWidth : board.GridWidth;
             int height = definition != null ? definition.GridHeight : board.GridHeight;
             float cellSize = definition != null ? definition.CellSize : board.CellSize;
@@ -107,7 +107,7 @@ namespace SCJam.LevelSystem
             return GetComponent<BoardGridTransform>();
         }
 
-        private LevelDefinition ResolveDefinition()
+        private LevelSO ResolveDefinition()
         {
             if (_levelDefinitionOverride != null)
             {
@@ -164,7 +164,7 @@ namespace SCJam.LevelSystem
             }
         }
 
-        private void DrawVehicles(LevelDefinition definition, float cellSize)
+        private void DrawVehicles(LevelSO definition, float cellSize)
         {
             LevelRuntimeState runtime = _runtimeController != null ? _runtimeController.RuntimeState : null;
             if (runtime != null && runtime.IsInitialized)
@@ -196,7 +196,7 @@ namespace SCJam.LevelSystem
             }
         }
 
-        private void DrawAuthoredVehicles(LevelDefinition definition, float cellSize)
+        private void DrawAuthoredVehicles(LevelSO definition, float cellSize)
         {
             _occupiedOnce.Clear();
             _overlapCells.Clear();
