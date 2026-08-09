@@ -1,7 +1,12 @@
 ---
-description: 
+description: General coding conventions for all Unity projects.
+globs:
 alwaysApply: true
 ---
+
+# Modification Scope
+- AI assistants are allowed to modify code files only.
+- Do not modify Unity assets, scenes, prefabs, materials, animations, textures, audio files, or other project content.
 
 # Code Architecture and Layout
 - All Monobehaviour scripts should follow this order:
@@ -12,7 +17,7 @@ alwaysApply: true
     + Public properties
     + Events
     + Methods
-- Use #region only for large Monobehaviour (>150 lines)
+- Use // ===== Region's name ===== // to split between regions. For example: // ===== Constants =====//.
 
 # Naming Conventions
 - Enum: should be singular.
@@ -28,7 +33,7 @@ alwaysApply: true
 - Properties: use PascalCase.
 - Events: use past tense with "On" prefix.
 - Methods: use PascalCase and start with a verb whenever possible.
-- Coroutine Methods: prefix with "Co".
+- Coroutine Methods: prefix with "Co_".
 - Local Variables: use camelCase.
 
 # Code Documenations
