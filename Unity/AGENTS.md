@@ -1,9 +1,3 @@
----
-description: General coding conventions for all Unity projects.
-globs:
-alwaysApply: true
----
-
 # Source of Truth
 When implementing gameplay features, use the following priority:
 - Explicit instructions from the user
