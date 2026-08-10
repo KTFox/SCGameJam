@@ -1,21 +1,9 @@
 fileFormatVersion: 2
-guid: fd823b02d4dab724085a0d07af8bca70
-AssetOrigin:
-  serializedVersion: 1
-  productId: 243035
-  packageName: 'GameDev Starter Kit - Farming [Free Edition]'
-  packageVersion: v1.1.0
-  assetPath: Assets/AssetHunts!/GameDev Starter Kit - Farming/Source File/Farm_Crop_Carrot_Step_02.fbx
-  uploadId: 767301
+guid: 23a7d42df429e47a8bbe9986b3dddb4c
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Color_Palette_01
-    second: {fileID: 2100000, guid: 187b856180e6144bb927bc03afaf1b30, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
