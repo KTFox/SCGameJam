@@ -1,5 +1,7 @@
 using SCJam.InputSystem;
+using SCJam.CameraSystem;
 using UnityEngine;
+
 
 namespace SCJam.VehicleSystem
 {
@@ -7,7 +9,6 @@ namespace SCJam.VehicleSystem
     {
         // ===== Serialized Fields ===== //
 
-        [SerializeField] private Camera _camera;
         [SerializeField] private LayerMask _vehicleLayerMask = ~0;
         [SerializeField] private float _maxRayDistance = 100f;
 
@@ -26,10 +27,7 @@ namespace SCJam.VehicleSystem
 
         private void HandleTouchPerformed(Vector2 screenPosition)
         {
-            if (_camera == null)
-                return;
-
-            Ray ray = _camera.ScreenPointToRay(screenPosition);
+            Ray ray = CameraController.Instance.MainCamera.ScreenPointToRay(screenPosition);
             if (!Physics.Raycast(ray, out RaycastHit hit, _maxRayDistance, _vehicleLayerMask))
                 return;
 
