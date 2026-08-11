@@ -33,6 +33,11 @@ namespace SCJam.VehicleSystem
             State = newState;
         }
 
+        public void BoardPassengers(int count)
+        {
+            OccupiedSeatCount += count;
+        }
+
         /// <summary>
         /// Called once the vehicle's footprint has fully left the board (footprint-clear release rule).
         /// </summary>

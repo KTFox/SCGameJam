@@ -2,7 +2,6 @@ using SCJam.InputSystem;
 using SCJam.CameraSystem;
 using UnityEngine;
 
-
 namespace SCJam.VehicleSystem
 {
     public class VehicleSelectionController : MonoBehaviour
