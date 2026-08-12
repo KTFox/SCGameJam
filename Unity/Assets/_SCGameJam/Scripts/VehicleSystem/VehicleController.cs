@@ -106,7 +106,7 @@ namespace SCJam.VehicleSystem
             _isMoving = true;
             _vehicle.ChangeState(VehicleState.Departing);
 
-            Vector3 direction = GetDirectionVector(_vehicle.MovementDirection);
+            Vector3 direction = GetWorldDirectionVector(_vehicle.MovementDirection);
             Vector3 departPosition = transform.position + direction * (_departDistance * _boardView.CellSize);
             await transform.DOMove(departPosition, ComputeDuration(departPosition)).SetEase(Ease.Linear).ToUniTask();
 
@@ -121,7 +121,7 @@ namespace SCJam.VehicleSystem
         private Vector3 ComputeExitWorldPosition()
         {
             int exitCellDistance = _movementResolver.GetExitCellDistance(_vehicle);
-            Vector3 direction = GetDirectionVector(_vehicle.MovementDirection);
+            Vector3 direction = GetWorldDirectionVector(_vehicle.MovementDirection);
             return transform.position + direction * (exitCellDistance * _boardView.CellSize);
         }
 
@@ -133,9 +133,9 @@ namespace SCJam.VehicleSystem
             return Vector3.Distance(transform.position, targetPosition) / _moveSpeed;
         }
 
-        private static Vector3 GetDirectionVector(GridDirection direction)
+        private Vector3 GetWorldDirectionVector(GridDirection direction)
         {
-            return direction switch
+            Vector3 localDirection = direction switch
             {
                 GridDirection.Up => Vector3.forward,
                 GridDirection.Down => Vector3.back,
@@ -143,6 +143,8 @@ namespace SCJam.VehicleSystem
                 GridDirection.Right => Vector3.right,
                 _ => Vector3.zero
             };
+
+            return _boardView.GridOrigin.rotation * localDirection;
         }
     }
 }

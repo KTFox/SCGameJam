@@ -14,8 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.LevelSystem.LevelConfig
   _boardWidth: 6
   _boardHeight: 6
-  _exitDirection: 3
-  _blockedCells: []
-  _vehiclePlacements: []
+  _vehiclePlacements:
+  - _vehicleConfig: {fileID: 11400000, guid: f875883158fae4223a39591656d9f3ca, type: 2}
+    _originCell: {x: 0, y: 0}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 6cd22f16af8f642c2b9e31b686f5bcbb, type: 2}
+    _originCell: {x: 1, y: 0}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: 5bbc43bc383c94c36a2d9cb08b8b92e6, type: 2}
+    _originCell: {x: 1, y: 1}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 84c6608d0bf6943b79ece3158edeb1c0, type: 2}
+    _originCell: {x: 2, y: 1}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: abe091a1289b84eb58cbbc053f08dc8f, type: 2}
+    _originCell: {x: 0, y: 4}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 5f35bae432379429d95437be386a2f8a, type: 2}
+    _originCell: {x: 3, y: 2}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 6cd22f16af8f642c2b9e31b686f5bcbb, type: 2}
+    _originCell: {x: 2, y: 5}
+    _movementDirection: 3
   _waitingSlotCount: 3
   _passengerColorSequence: 

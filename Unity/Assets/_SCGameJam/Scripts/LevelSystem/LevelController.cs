@@ -63,7 +63,7 @@ namespace SCJam.LevelSystem
             _levelState = LevelState.Loading;
 
             BuildBoard(levelConfig);
-            //SpawnVehicles(levelConfig);
+            SpawnVehicles(levelConfig);
             //BuildPassengerQueue(levelConfig);
             //RefreshQueueVisuals();
 
@@ -102,7 +102,10 @@ namespace SCJam.LevelSystem
                 if (placement.VehicleConfig == null)
                     continue;
 
-                IReadOnlyList<Vector2Int> footprintCells = ComputeFootprintCells(placement.OriginCell, placement.VehicleConfig.FootprintSize);
+                Vector2Int footprintSize = GetOrientedFootprintSize(
+                    placement.VehicleConfig.FootprintSize,
+                    placement.MovementDirection);
+                IReadOnlyList<Vector2Int> footprintCells = ComputeFootprintCells(placement.OriginCell, footprintSize);
                 Vehicle vehicle = new(i, placement.VehicleConfig.Color, placement.VehicleConfig.Capacity, footprintCells, placement.MovementDirection);
 
                 _boardGrid.PlaceVehicle(vehicle.Id, footprintCells);
@@ -111,14 +114,13 @@ namespace SCJam.LevelSystem
                 if (placement.VehicleConfig.Prefab == null || _boardView == null)
                     continue;
 
-                Vector3 spawnPosition = _boardView.CellToWorld(placement.OriginCell);
-                GameObject instance = Instantiate(placement.VehicleConfig.Prefab, spawnPosition, Quaternion.identity, _vehicleSpawnRoot);
-                if (!instance.TryGetComponent(out VehicleController controller))
-                    controller = instance.AddComponent<VehicleController>();
+                Vector3 spawnPosition = GetVehicleSpawnPosition(placement.OriginCell, footprintSize);
+                Quaternion spawnRotation = GetVehicleSpawnRotation(placement.MovementDirection);
+                VehicleController vehicleController = Instantiate(placement.VehicleConfig.Prefab, spawnPosition, spawnRotation, _vehicleSpawnRoot);
+                vehicleController.Initialize(vehicle, _boardGrid, _boardView, _movementResolver, _waitingAreaManager, _waitingAreaView);
 
-                controller.Initialize(vehicle, _boardGrid, _boardView, _movementResolver, _waitingAreaManager, _waitingAreaView);
-                _vehicleControllersById[vehicle.Id] = controller;
-                _spawnedGameObjects.Add(instance);
+                _vehicleControllersById[vehicle.Id] = vehicleController;
+                _spawnedGameObjects.Add(vehicleController.gameObject);
             }
         }
 
@@ -321,6 +323,38 @@ namespace SCJam.LevelSystem
             }
 
             return cells;
+        }
+
+        private static Vector2Int GetOrientedFootprintSize(Vector2Int footprintSize, GridDirection movementDirection)
+        {
+            return movementDirection is GridDirection.Left or GridDirection.Right
+                ? new Vector2Int(footprintSize.y, footprintSize.x)
+                : footprintSize;
+        }
+
+        private Vector3 GetVehicleSpawnPosition(Vector2Int originCell, Vector2Int footprintSize)
+        {
+            Vector3 footprintCenterOffset = new(
+                (footprintSize.x - 1) * _boardView.CellSize * 0.5f,
+                0f,
+                (footprintSize.y - 1) * _boardView.CellSize * 0.5f);
+
+            return _boardView.CellToWorld(originCell)
+                   + _boardView.GridOrigin.rotation * footprintCenterOffset;
+        }
+
+        private Quaternion GetVehicleSpawnRotation(GridDirection movementDirection)
+        {
+            float localAngle = movementDirection switch
+            {
+                GridDirection.Up => 0f,
+                GridDirection.Right => 90f,
+                GridDirection.Down => 180f,
+                GridDirection.Left => -90f,
+                _ => 0f
+            };
+
+            return _boardView.GridOrigin.rotation * Quaternion.Euler(0f, localAngle, 0f);
         }
     }
 }
