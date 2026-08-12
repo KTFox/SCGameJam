@@ -6,7 +6,8 @@ namespace SCJam.BoardSystem
     {
         // ===== Serialized Fields ===== //
 
-        [SerializeField] private Transform _gridOrigin;
+        [SerializeField, Tooltip("Transform at the center of the entire board grid.")]
+        private Transform _gridOrigin;
         [SerializeField, Min(0.1f)] private float _cellSize;
         [SerializeField] private bool _areGizmosEnabled = true;
         [SerializeField] private Color _gizmoColor;
@@ -33,16 +34,26 @@ namespace SCJam.BoardSystem
 
         public Vector3 CellToWorld(Vector2Int cell)
         {
-            Vector3 localPosition = new(cell.x * _cellSize, 0f, cell.y * _cellSize);
+            Vector3 localPosition = GetCellLocalPosition(cell);
             return GridOrigin.position + GridOrigin.rotation * localPosition;
         }
 
         public Vector2Int WorldToCell(Vector3 worldPosition)
         {
             Vector3 localPosition = Quaternion.Inverse(GridOrigin.rotation) * (worldPosition - GridOrigin.position);
+            float firstCellCenterX = (_boardGrid.Width - 1) * _cellSize * -0.5f;
+            float firstCellCenterZ = (_boardGrid.Height - 1) * _cellSize * -0.5f;
+
             return new Vector2Int(
-                Mathf.RoundToInt(localPosition.x / _cellSize),
-                Mathf.RoundToInt(localPosition.z / _cellSize));
+                Mathf.RoundToInt((localPosition.x - firstCellCenterX) / _cellSize),
+                Mathf.RoundToInt((localPosition.z - firstCellCenterZ) / _cellSize));
+        }
+
+        private Vector3 GetCellLocalPosition(Vector2Int cell)
+        {
+            float x = (cell.x - (_boardGrid.Width - 1) * 0.5f) * _cellSize;
+            float z = (cell.y - (_boardGrid.Height - 1) * 0.5f) * _cellSize;
+            return new Vector3(x, 0f, z);
         }
 
 
@@ -77,7 +88,7 @@ namespace SCJam.BoardSystem
                     if (!_boardGrid.IsCellOccupied(new Vector2Int(x, y)))
                         continue;
 
-                    Vector3 cellCenter = new(x * _cellSize, 0f, y * _cellSize);
+                    Vector3 cellCenter = GetCellLocalPosition(new Vector2Int(x, y));
                     Gizmos.DrawCube(cellCenter, new Vector3(_cellSize, 0.02f, _cellSize));
                 }
             }
@@ -87,20 +98,20 @@ namespace SCJam.BoardSystem
         {
             Gizmos.color = _gizmoColor;
 
-            float minX = -_cellSize * 0.5f;
-            float minZ = -_cellSize * 0.5f;
-            float maxX = (_boardGrid.Width - 0.5f) * _cellSize;
-            float maxZ = (_boardGrid.Height - 0.5f) * _cellSize;
+            float minX = _boardGrid.Width * _cellSize * -0.5f;
+            float minZ = _boardGrid.Height * _cellSize * -0.5f;
+            float maxX = -minX;
+            float maxZ = -minZ;
 
             for (int x = 0; x <= _boardGrid.Width; x++)
             {
-                float lineX = (x - 0.5f) * _cellSize;
+                float lineX = minX + x * _cellSize;
                 Gizmos.DrawLine(new Vector3(lineX, 0f, minZ), new Vector3(lineX, 0f, maxZ));
             }
 
             for (int y = 0; y <= _boardGrid.Height; y++)
             {
-                float lineZ = (y - 0.5f) * _cellSize;
+                float lineZ = minZ + y * _cellSize;
                 Gizmos.DrawLine(new Vector3(minX, 0f, lineZ), new Vector3(maxX, 0f, lineZ));
             }
         }
