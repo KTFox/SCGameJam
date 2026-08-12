@@ -5,6 +5,7 @@ namespace SCJam.WaitingAreaSystem
     public sealed class WaitingAreaManager
     {
         private readonly List<WaitingSlot> _slots;
+        private int _nextArrivalOrder;
 
 
         public IReadOnlyList<WaitingSlot> Slots => _slots;
@@ -21,7 +22,8 @@ namespace SCJam.WaitingAreaSystem
         }
 
         /// <summary>
-        /// First-available only; priority-based selection arrives in M4 via IWaitingVehicleSelector.
+        /// First-available only. Priority among already-occupied waiting vehicles for boarding is
+        /// handled separately by IWaitingVehicleSelector, not by slot reservation order.
         /// </summary>
         public bool TryReserveSlot(int vehicleId, out WaitingSlot reservedSlot)
         {
@@ -39,7 +41,7 @@ namespace SCJam.WaitingAreaSystem
             return false;
         }
 
-        public void ConfirmOccupied(WaitingSlot slot) => slot.ConfirmOccupied();
+        public void ConfirmOccupied(WaitingSlot slot) => slot.ConfirmOccupied(_nextArrivalOrder++);
 
         public void ReleaseSlot(WaitingSlot slot) => slot.Release();
     }

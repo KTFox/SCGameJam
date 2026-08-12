@@ -46,17 +46,17 @@ Scripts/
 
 ## Milestones
 
-### M0 — Foundation (infra only)
+### M0 — Foundation (infra only) ✅
 - `Scripts/SCJam.Runtime.asmdef`, `Scripts/Tests/SCJam.Runtime.Tests.asmdef` (EditMode, references Runtime + TestRunner)
 - `Common/PuzzleColor.cs`, `Common/GridDirection.cs`
 
-### M1 — Board & Grid (pure logic, unit-testable, not playable)
+### M1 — Board & Grid (pure logic, unit-testable, not playable) ✅
 - `BoardSystem/BoardGrid.cs` — occupancy map, `IsCellInBounds`, `IsCellOccupied(cell, excludingVehicleId)`, `IsCellBlocked`, `GetCellsToBoundary`, `PlaceVehicle`/`RemoveVehicle`
 - `BoardSystem/ParkingBoardData.cs` — Width, Height, blocked cells, single exit direction
 - `BoardSystem/BoardView.cs` (MonoBehaviour, presentation — grid↔world conversion, tile/obstacle visuals)
 - Tests: occupancy, bounds, obstacle blocking, exit-direction checks
 
-### M2 — Vehicle Movement, Collision & Waiting-Slot Reservation (first playable increment)
+### M2 — Vehicle Movement, Collision & Waiting-Slot Reservation (first playable increment) ✅
 - `VehicleSystem/Vehicle.cs` — Id, Color, Capacity, OccupiedSeatCount, GridFootprint, MovementDirection, State
 - `VehicleSystem/VehicleState.cs` (enum: Parked, MovingToExit, Waiting, Boarding, Full, Departing, Completed)
 - `VehicleSystem/VehicleMovementResolver.cs` — `IsPathClear`/sweep-to-boundary per `VehicleMovement.md`, excludes self
@@ -69,15 +69,18 @@ Scripts/
 - Rule: a vehicle's old board cells stay occupied through its exit animation, released only once its footprint fully clears the board (footprint-clear rule applied consistently)
 - Human work required: place car prefabs + `VehicleConfig` assets in scene, wire `BoardView`/`WaitingAreaView`
 
-### M3 — Passenger Queue & Basic Boarding (playable increment 2)
+### M3 — Passenger Queue & Basic Boarding (playable increment 2) ✅
 - `PassengerSystem/Passenger.cs`, `PassengerState.cs` (Queued, MovingToVehicle, Completed)
 - `PassengerSystem/PassengerQueue.cs` — `GetAccessibleFrontGroup()` (grouped-front rule), `Dequeue(count)`
 - `PassengerSystem/BoardingResolver.cs` — matches waiting vehicle to front group, updates seats, transitions to Full
 - `PassengerSystem/PassengerController.cs` / `PassengerQueueView.cs` (MonoBehaviour views)
 - Tests: grouped-front dequeue, capacity math
 
-### M4 — Waiting-Slot Matching Priority (pure logic, no new views)
+### M4 — Waiting-Slot Matching Priority (pure logic, no new views) ✅
 - `WaitingAreaSystem/IWaitingVehicleSelector.cs`, `DefaultWaitingVehicleSelector.cs` — 3-tier priority (highest occupied-seat count → earliest-arrived → lowest slot index), drop-in for `BoardingResolver`
+- `WaitingAreaSystem/WaitingVehicleEntry.cs` — pairs a `Vehicle` with its `WaitingSlot` for the selector
+- `WaitingSlot.ArrivalOrder`, stamped by `WaitingAreaManager.ConfirmOccupied` via a monotonic counter, backs the earliest-arrived tier
+- `BoardingResolver.TryBoard(IReadOnlyList<WaitingVehicleEntry>, PuzzleColor, IWaitingVehicleSelector)` overload wires the selector in without touching the existing single-vehicle `TryBoard`
 - Fully unit-testable with synthetic fixtures, no scene needed
 
 ### M5 — Data-Driven Levels & Orchestration (playable increment 3)

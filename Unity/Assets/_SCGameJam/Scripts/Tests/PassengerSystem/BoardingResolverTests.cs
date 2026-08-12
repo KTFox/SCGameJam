@@ -3,6 +3,7 @@ using NUnit.Framework;
 using SCJam.Common;
 using SCJam.PassengerSystem;
 using SCJam.VehicleSystem;
+using SCJam.WaitingAreaSystem;
 using UnityEngine;
 
 namespace SCJam.Tests.PassengerSystem
@@ -97,6 +98,48 @@ namespace SCJam.Tests.PassengerSystem
             BoardingResolver resolver = new(queue);
 
             IReadOnlyList<Passenger> boarded = resolver.TryBoard(vehicle);
+
+            Assert.AreEqual(0, boarded.Count);
+        }
+
+        [Test]
+        public void TryBoard_WithSelector_BoardsTheHighestPriorityMatchingVehicle()
+        {
+            PassengerQueue queue = new(new[] { CreatePassenger(1, PuzzleColor.Orange) });
+            Vehicle lessFull = CreateWaitingVehicle(PuzzleColor.Orange, capacity: 4, occupiedSeatCount: 1);
+            Vehicle mostFull = CreateWaitingVehicle(PuzzleColor.Orange, capacity: 4, occupiedSeatCount: 3);
+            WaitingSlot lessFullSlot = new(0);
+            lessFullSlot.Reserve(lessFull.Id);
+            lessFullSlot.ConfirmOccupied(0);
+            WaitingSlot mostFullSlot = new(1);
+            mostFullSlot.Reserve(mostFull.Id);
+            mostFullSlot.ConfirmOccupied(1);
+            WaitingVehicleEntry[] entries =
+            {
+                new(lessFull, lessFullSlot),
+                new(mostFull, mostFullSlot)
+            };
+            BoardingResolver resolver = new(queue);
+
+            IReadOnlyList<Passenger> boarded = resolver.TryBoard(entries, PuzzleColor.Orange, new DefaultWaitingVehicleSelector());
+
+            Assert.AreEqual(1, boarded.Count);
+            Assert.AreEqual(4, mostFull.OccupiedSeatCount);
+            Assert.AreEqual(1, lessFull.OccupiedSeatCount);
+        }
+
+        [Test]
+        public void TryBoard_WithSelector_ReturnsEmpty_WhenNoCandidateMatches()
+        {
+            PassengerQueue queue = new(new[] { CreatePassenger(1, PuzzleColor.Pink) });
+            Vehicle vehicle = CreateWaitingVehicle(PuzzleColor.Orange, capacity: 4);
+            WaitingSlot slot = new(0);
+            slot.Reserve(vehicle.Id);
+            slot.ConfirmOccupied(0);
+            WaitingVehicleEntry[] entries = { new(vehicle, slot) };
+            BoardingResolver resolver = new(queue);
+
+            IReadOnlyList<Passenger> boarded = resolver.TryBoard(entries, PuzzleColor.Pink, new DefaultWaitingVehicleSelector());
 
             Assert.AreEqual(0, boarded.Count);
         }

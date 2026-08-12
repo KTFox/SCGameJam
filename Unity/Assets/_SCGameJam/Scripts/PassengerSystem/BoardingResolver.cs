@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using SCJam.Common;
 using SCJam.VehicleSystem;
+using SCJam.WaitingAreaSystem;
 
 namespace SCJam.PassengerSystem
 {
@@ -12,6 +14,16 @@ namespace SCJam.PassengerSystem
         public BoardingResolver(PassengerQueue passengerQueue)
         {
             _passengerQueue = passengerQueue;
+        }
+
+        /// <summary>
+        /// Picks the best waiting vehicle among candidates via selector, then attempts to board it.
+        /// Drop-in for TryBoard(Vehicle) when multiple waiting vehicles may share the front group's color.
+        /// </summary>
+        public IReadOnlyList<Passenger> TryBoard(IReadOnlyList<WaitingVehicleEntry> waitingVehicles, PuzzleColor color, IWaitingVehicleSelector selector)
+        {
+            Vehicle vehicle = selector.SelectVehicle(waitingVehicles, color);
+            return vehicle != null ? TryBoard(vehicle) : Array.Empty<Passenger>();
         }
 
         /// <summary>
