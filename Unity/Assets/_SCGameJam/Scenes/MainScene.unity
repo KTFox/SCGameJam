@@ -144,12 +144,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 163564706}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1944325378}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &163564708
 MonoBehaviour:
@@ -188,12 +188,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 255699096}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1944325378}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &255699098
 MonoBehaviour:
@@ -780,6 +780,55 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1126279078
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1126279079}
+  - component: {fileID: 1126279080}
+  m_Layer: 0
+  m_Name: BoardView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1126279079
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1126279078}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1126279080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1126279078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33d8a40b13dcd45858a7598c68917e5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.BoardSystem.BoardView
+  _cellSize: 1
+  _originOffset: {x: 0, y: 0, z: 0}
+  _tileContainer: {fileID: 0}
+  _tilePrefab: {fileID: 0}
+  _obstaclePrefab: {fileID: 0}
 --- !u!1 &1128105875
 GameObject:
   m_ObjectHideFlags: 0
@@ -853,12 +902,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1363748807}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1944325378}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1363748809
 MonoBehaviour:
@@ -918,7 +967,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e9d384427317405dbb71177c3b5a034, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.LevelSystem.LevelController
-  _boardView: {fileID: 0}
+  _boardView: {fileID: 1126279080}
   _waitingAreaView: {fileID: 0}
   _passengerQueueView: {fileID: 0}
   _vehicleSpawnRoot: {fileID: 0}
@@ -1032,7 +1081,10 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 163564707}
+  - {fileID: 255699097}
+  - {fileID: 1363748808}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1944325379
@@ -1047,9 +1099,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc3abd9a67c6347ce8344e08ad8f6cb1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SCJam.GameManager
-  _mainBGM: {fileID: 11400000, guid: 6fa4933d3fd38447aa16e43524a9b061, type: 2}
-  _levelController: {fileID: 0}
-  _startingLevel: {fileID: 0}
+  _levelController: {fileID: 1682816973}
+  _startingLevel: {fileID: 11400000, guid: 1be9f71385a8e4628b7abb7160e7d062, type: 2}
 --- !u!1001 &1720260099376744017
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1216,10 +1267,8 @@ SceneRoots:
   - {fileID: 1830900350}
   - {fileID: 1019131993}
   - {fileID: 1944325378}
-  - {fileID: 163564707}
-  - {fileID: 255699097}
-  - {fileID: 1363748808}
   - {fileID: 1682816972}
+  - {fileID: 1126279079}
   - {fileID: 1128105876}
   - {fileID: 268321449}
   - {fileID: 279891966}

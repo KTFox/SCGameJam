@@ -39,12 +39,11 @@ The waiting area contains a fixed number of vehicle slots.
 A vehicle occupies one waiting slot after leaving the parking area.
 
 ## Parking Board
-The parking board is the spatial puzzle area containing vehicles and optional objects.
+The parking board is the spatial puzzle area containing vehicles.
 ParkingBoard:
 - Width
 - Height
 - Vehicles
-- Optional objects
 - Exit boundaries
 The board may be represented by:
 - A logical square grid

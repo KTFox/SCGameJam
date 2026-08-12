@@ -9,9 +9,9 @@ namespace SCJam.Tests.VehicleSystem
 {
     public class VehicleMovementResolverTests
     {
-        private static BoardGrid CreateGrid(int width, int height, IEnumerable<Vector2Int> blockedCells = null)
+        private static BoardGrid CreateGrid(int width, int height)
         {
-            ParkingBoardData boardData = new(width, height, blockedCells ?? new Vector2Int[0], GridDirection.Right);
+            ParkingBoardData boardData = new(width, height, GridDirection.Right);
             return new BoardGrid(boardData);
         }
 
@@ -29,18 +29,6 @@ namespace SCJam.Tests.VehicleSystem
             VehicleMovementResolver resolver = new(grid);
 
             Assert.IsTrue(resolver.IsPathClear(vehicle));
-        }
-
-        [Test]
-        public void IsPathClear_ReturnsFalse_WhenBlockedCellIntersectsTheSweptPath()
-        {
-            Vector2Int[] blocked = { new(3, 0) };
-            BoardGrid grid = CreateGrid(5, 5, blocked);
-            Vehicle vehicle = CreateVehicle(1, new[] { new Vector2Int(0, 0) }, GridDirection.Right);
-            grid.PlaceVehicle(vehicle.Id, vehicle.GridFootprint);
-            VehicleMovementResolver resolver = new(grid);
-
-            Assert.IsFalse(resolver.IsPathClear(vehicle));
         }
 
         [Test]

@@ -34,4 +34,4 @@ The game focuses on simple interactions, spatial reasoning, and solving traffic-
 * Levels should be data-driven rather than hard-coded.
 * Gameplay systems should be modular and reusable.
 * Game state and visual presentation should remain separated where practical.
-* Architecture should support adding new levels, mechanics, obstacles, and boosters without rewriting the core gameplay.
+* Architecture should support adding new levels, mechanics, and boosters without rewriting the core gameplay.

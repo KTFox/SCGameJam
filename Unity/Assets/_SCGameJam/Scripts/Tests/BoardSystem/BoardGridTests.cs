@@ -11,10 +11,9 @@ namespace SCJam.Tests.BoardSystem
         private static ParkingBoardData CreateBoardData(
             int width,
             int height,
-            IEnumerable<Vector2Int> blockedCells = null,
             GridDirection exitDirection = GridDirection.Right)
         {
-            return new ParkingBoardData(width, height, blockedCells ?? new Vector2Int[0], exitDirection);
+            return new ParkingBoardData(width, height, exitDirection);
         }
 
         [Test]
@@ -34,16 +33,6 @@ namespace SCJam.Tests.BoardSystem
             Assert.IsFalse(grid.IsCellInBounds(new Vector2Int(-1, 0)));
             Assert.IsFalse(grid.IsCellInBounds(new Vector2Int(4, 0)));
             Assert.IsFalse(grid.IsCellInBounds(new Vector2Int(0, 3)));
-        }
-
-        [Test]
-        public void IsCellBlocked_ReturnsTrue_OnlyForObstacleCells()
-        {
-            Vector2Int[] blocked = { new(1, 1) };
-            BoardGrid grid = new(CreateBoardData(4, 4, blocked));
-
-            Assert.IsTrue(grid.IsCellBlocked(new Vector2Int(1, 1)));
-            Assert.IsFalse(grid.IsCellBlocked(new Vector2Int(0, 0)));
         }
 
         [Test]

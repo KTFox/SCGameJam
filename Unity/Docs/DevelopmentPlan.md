@@ -13,7 +13,6 @@ Based on `Overview.md`, `CoreEntities.md`, `WaitingSlot.md`, `VehicleMovement.md
 | Loss condition | None — pure puzzle, no timer/move limit, no `LevelFailed` state. |
 | Waiting-slot release timing | Footprint-clear rule: a board cell/slot is released once the vehicle's footprint has fully left that space. Deterministic, no animation-event coupling. |
 | Vehicle footprint | Authored explicitly per `VehicleConfig` (a `Vector2Int` size), not derived from capacity. Suggested defaults: 4-slot → 1×2, 6-slot → 1×3 — confirm against actual prefab bounds when authoring assets. |
-| Obstacles | Static, immovable collision blockers only for now. Interactive/removable obstacles are stretch scope (M7). |
 | Boosters | Not built this pass. Architecture should stay extensible (see `IWaitingVehicleSelector` pattern in M4) but boosters are explicitly out of committed scope. |
 
 ## Namespace / Folder Layout
@@ -23,7 +22,7 @@ Sibling folders under `Assets/_SCGameJam/Scripts/`, matching the existing flat c
 ```
 Scripts/
   Common/              SCJam.Common            PuzzleColor, GridDirection (shared, zero deps)
-  BoardSystem/         SCJam.BoardSystem        grid, obstacles, exit
+  BoardSystem/         SCJam.BoardSystem        grid, exit
   VehicleSystem/       SCJam.VehicleSystem      vehicle logic + movement + view
   WaitingAreaSystem/   SCJam.WaitingAreaSystem  slots + priority matching
   PassengerSystem/     SCJam.PassengerSystem    queue + boarding matching
@@ -51,10 +50,10 @@ Scripts/
 - `Common/PuzzleColor.cs`, `Common/GridDirection.cs`
 
 ### M1 — Board & Grid (pure logic, unit-testable, not playable) ✅
-- `BoardSystem/BoardGrid.cs` — occupancy map, `IsCellInBounds`, `IsCellOccupied(cell, excludingVehicleId)`, `IsCellBlocked`, `GetCellsToBoundary`, `PlaceVehicle`/`RemoveVehicle`
-- `BoardSystem/ParkingBoardData.cs` — Width, Height, blocked cells, single exit direction
-- `BoardSystem/BoardView.cs` (MonoBehaviour, presentation — grid↔world conversion, tile/obstacle visuals)
-- Tests: occupancy, bounds, obstacle blocking, exit-direction checks
+- `BoardSystem/BoardGrid.cs` — occupancy map, `IsCellInBounds`, `IsCellOccupied(cell, excludingVehicleId)`, `GetCellsToBoundary`, `PlaceVehicle`/`RemoveVehicle`
+- `BoardSystem/ParkingBoardData.cs` — Width, Height, single exit direction
+- `BoardSystem/BoardView.cs` (MonoBehaviour, presentation — grid↔world conversion, tile visuals)
+- Tests: occupancy, bounds, exit-direction checks
 
 ### M2 — Vehicle Movement, Collision & Waiting-Slot Reservation (first playable increment) ✅
 - `VehicleSystem/Vehicle.cs` — Id, Color, Capacity, OccupiedSeatCount, GridFootprint, MovementDirection, State
@@ -84,7 +83,7 @@ Scripts/
 - Fully unit-testable with synthetic fixtures, no scene needed
 
 ### M5 — Data-Driven Levels & Orchestration (playable increment 3) ✅
-- `LevelSystem/LevelConfig.cs` (ScriptableObject) — board size, blocked cells, exit direction, `VehiclePlacement[]`, waiting-slot count, passenger color sequence
+- `LevelSystem/LevelConfig.cs` (ScriptableObject) — board size, exit direction, `VehiclePlacement[]`, waiting-slot count, passenger color sequence
 - `LevelSystem/VehiclePlacement.cs` — per-vehicle authoring data (`VehicleConfig`, origin cell, movement direction); footprint cells are derived from origin + `VehicleConfig.FootprintSize`
 - `LevelSystem/LevelState.cs` (enum: Loading, Playing, Won)
 - `LevelSystem/LevelController.cs` — builds `ParkingBoardData`/`BoardGrid`/`VehicleMovementResolver`/`WaitingAreaManager`/`PassengerQueue`/`BoardingResolver` from a `LevelConfig`; spawns vehicle/passenger views (spawning is now data-driven, superseding M2's manual scene placement); each `Update` while `Playing` matches waiting vehicles to the front passenger group via `DefaultWaitingVehicleSelector` (M4), completes boarding once boarded passengers finish animating, requests departure for `Full` vehicles, and evaluates the win condition; exposes `LoadLevel(LevelConfig)` and `OnLevelCompleted`
@@ -99,7 +98,7 @@ Scripts/
 - DOTween easing polish, optional Cinemachine framing
 
 ### M7 — Stretch (explicitly out of committed scope)
-- Interactive/removable obstacles, boosters (undo/shuffle/extra-slot/remove-vehicle), level progression/save data. Architecture readiness only.
+- Boosters (undo/shuffle/extra-slot/remove-vehicle), level progression/save data. Architecture readiness only.
 
 ## Verification
 

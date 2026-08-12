@@ -38,7 +38,7 @@ namespace SCJam.Core
                 LoadLevel(_startingLevel);
         }
 
-        public void LoadLevel(LevelConfig levelConfig)
+        private void LoadLevel(LevelConfig levelConfig)
         {
             if (_levelController == null || levelConfig == null)
                 return;

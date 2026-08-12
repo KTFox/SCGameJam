@@ -10,7 +10,6 @@ namespace SCJam.BoardSystem
         [SerializeField] private Vector3 _originOffset = Vector3.zero;
         [SerializeField] private Transform _tileContainer;
         [SerializeField] private GameObject _tilePrefab;
-        [SerializeField] private GameObject _obstaclePrefab;
 
 
         // ===== Private Fields ===== //
@@ -58,11 +57,10 @@ namespace SCJam.BoardSystem
                 for (int y = 0; y < _boardData.Height; y++)
                 {
                     Vector2Int cell = new(x, y);
-                    GameObject prefab = _boardData.IsCellBlocked(cell) ? _obstaclePrefab : _tilePrefab;
-                    if (prefab == null)
+                    if (_tilePrefab == null)
                         continue;
 
-                    GameObject instance = Instantiate(prefab, container);
+                    GameObject instance = Instantiate(_tilePrefab, container);
                     instance.transform.position = CellToWorld(cell);
                 }
             }

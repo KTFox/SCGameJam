@@ -18,7 +18,7 @@ namespace SCJam.VehicleSystem
         {
             foreach (Vector2Int cell in GetSweptFootprintCells(vehicle))
             {
-                if (_boardGrid.IsCellBlocked(cell) || _boardGrid.IsCellOccupied(cell, vehicle.Id))
+                if (_boardGrid.IsCellOccupied(cell, vehicle.Id))
                     return false;
             }
 

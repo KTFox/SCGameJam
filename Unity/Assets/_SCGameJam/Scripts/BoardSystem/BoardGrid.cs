@@ -21,8 +21,6 @@ namespace SCJam.BoardSystem
             return cell.x >= 0 && cell.x < _boardData.Width && cell.y >= 0 && cell.y < _boardData.Height;
         }
 
-        public bool IsCellBlocked(Vector2Int cell) => _boardData.IsCellBlocked(cell);
-
         /// <summary>
         /// Checks whether a cell is occupied, optionally ignoring a specific vehicle.
         /// </summary>

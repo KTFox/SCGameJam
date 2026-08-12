@@ -10,7 +10,6 @@ namespace SCJam.LevelSystem
         [SerializeField] private int _boardWidth = 6;
         [SerializeField] private int _boardHeight = 6;
         [SerializeField] private GridDirection _exitDirection = GridDirection.Right;
-        [SerializeField] private Vector2Int[] _blockedCells;
         [SerializeField] private VehiclePlacement[] _vehiclePlacements;
         [SerializeField] private int _waitingSlotCount = 3;
         [SerializeField] private PuzzleColor[] _passengerColorSequence;
@@ -19,7 +18,6 @@ namespace SCJam.LevelSystem
         public int BoardWidth => _boardWidth;
         public int BoardHeight => _boardHeight;
         public GridDirection ExitDirection => _exitDirection;
-        public IReadOnlyList<Vector2Int> BlockedCells => _blockedCells;
         public IReadOnlyList<VehiclePlacement> VehiclePlacements => _vehiclePlacements;
         public int WaitingSlotCount => _waitingSlotCount;
         public IReadOnlyList<PuzzleColor> PassengerColorSequence => _passengerColorSequence;
