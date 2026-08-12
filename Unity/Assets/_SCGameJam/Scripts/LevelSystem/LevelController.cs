@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SCJam.AudioSystem;
 using SCJam.BoardSystem;
 using SCJam.Common;
 using SCJam.PassengerSystem;
@@ -68,6 +69,7 @@ namespace SCJam.LevelSystem
             //RefreshQueueVisuals();
 
             _levelState = LevelState.Playing;
+            AudioManager.Instance?.PlaySound(levelConfig.BackgroundMusic);
         }
 
         private void Update()

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SCJam.AudioSystem;
 using SCJam.Common;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ namespace SCJam.LevelSystem
         [SerializeField] private VehiclePlacement[] _vehiclePlacements;
         [SerializeField] private int _waitingSlotCount = 3;
         [SerializeField] private PuzzleColor[] _passengerColorSequence;
+        [SerializeField] private SoundSO _backgroundMusic;
 
 
         public int BoardWidth => _boardWidth;
@@ -19,5 +21,6 @@ namespace SCJam.LevelSystem
         public IReadOnlyList<VehiclePlacement> VehiclePlacements => _vehiclePlacements;
         public int WaitingSlotCount => _waitingSlotCount;
         public IReadOnlyList<PuzzleColor> PassengerColorSequence => _passengerColorSequence;
+        public SoundSO BackgroundMusic => _backgroundMusic;
     }
 }

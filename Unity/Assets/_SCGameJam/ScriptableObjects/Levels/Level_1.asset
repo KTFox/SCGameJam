@@ -38,3 +38,4 @@ MonoBehaviour:
     _movementDirection: 3
   _waitingSlotCount: 3
   _passengerColorSequence: 
+  _backgroundMusic: {fileID: 11400000, guid: 6fa4933d3fd38447aa16e43524a9b061, type: 2}
