@@ -6,74 +6,75 @@ namespace SCJam.BoardSystem
     {
         // ===== Serialized Fields ===== //
 
-        [SerializeField] private float _cellSize = 1f;
-        [SerializeField] private Vector3 _originOffset = Vector3.zero;
-        [SerializeField] private Transform _tileContainer;
-        [SerializeField] private GameObject _tilePrefab;
+        [SerializeField] private Transform _gridOrigin;
+        [SerializeField, Min(0.1f)] private float _cellSize = 2f;
+        [SerializeField] private bool _areGizmosEnabled = true;
+        [SerializeField] private Color _gizmoColor = Color.green;
 
 
         // ===== Private Fields ===== //
 
-        private ParkingBoardData _boardData;
+        private BoardGrid _boardGrid;
 
 
         // ===== Public Properties ===== //
 
         public float CellSize => _cellSize;
+        public Transform GridOrigin => _gridOrigin != null ? _gridOrigin : transform;
 
 
         // ===== Methods ===== //
 
-        public void Initialize(ParkingBoardData boardData)
+        public void Initialize(BoardGrid boardGrid)
         {
-            _boardData = boardData;
-            BuildVisuals();
+            _boardGrid = boardGrid;
         }
 
         public Vector3 CellToWorld(Vector2Int cell)
         {
-            return _originOffset + new Vector3(cell.x * _cellSize, 0f, cell.y * _cellSize);
+            Vector3 localPosition = new(cell.x * _cellSize, 0f, cell.y * _cellSize);
+            return GridOrigin.position + GridOrigin.rotation * localPosition;
         }
 
         public Vector2Int WorldToCell(Vector3 worldPosition)
         {
-            Vector3 local = worldPosition - _originOffset;
-            int x = Mathf.RoundToInt(local.x / _cellSize);
-            int y = Mathf.RoundToInt(local.z / _cellSize);
-            return new Vector2Int(x, y);
+            Vector3 localPosition = Quaternion.Inverse(GridOrigin.rotation) * (worldPosition - GridOrigin.position);
+            return new Vector2Int(
+                Mathf.RoundToInt(localPosition.x / _cellSize),
+                Mathf.RoundToInt(localPosition.z / _cellSize));
         }
 
-        private void BuildVisuals()
+        private void OnDrawGizmos()
         {
-            if (_boardData == null)
+            if (!_areGizmosEnabled || _boardGrid == null)
                 return;
 
-            ClearVisuals();
+            Matrix4x4 previousMatrix = Gizmos.matrix;
+            Color previousColor = Gizmos.color;
+            Transform gridOrigin = GridOrigin;
 
-            Transform container = _tileContainer != null ? _tileContainer : transform;
+            Gizmos.matrix = Matrix4x4.TRS(gridOrigin.position, gridOrigin.rotation, Vector3.one);
+            Gizmos.color = _gizmoColor;
 
-            for (int x = 0; x < _boardData.Width; x++)
+            float minX = -_cellSize * 0.5f;
+            float minZ = -_cellSize * 0.5f;
+            float maxX = (_boardGrid.Width - 0.5f) * _cellSize;
+            float maxZ = (_boardGrid.Height - 0.5f) * _cellSize;
+
+            for (int x = 0; x <= _boardGrid.Width; x++)
             {
-                for (int y = 0; y < _boardData.Height; y++)
-                {
-                    Vector2Int cell = new(x, y);
-                    if (_tilePrefab == null)
-                        continue;
-
-                    GameObject instance = Instantiate(_tilePrefab, container);
-                    instance.transform.position = CellToWorld(cell);
-                }
+                float lineX = (x - 0.5f) * _cellSize;
+                Gizmos.DrawLine(new Vector3(lineX, 0f, minZ), new Vector3(lineX, 0f, maxZ));
             }
-        }
 
-        private void ClearVisuals()
-        {
-            Transform container = _tileContainer != null ? _tileContainer : transform;
-
-            for (int i = container.childCount - 1; i >= 0; i--)
+            for (int y = 0; y <= _boardGrid.Height; y++)
             {
-                Destroy(container.GetChild(i).gameObject);
+                float lineZ = (y - 0.5f) * _cellSize;
+                Gizmos.DrawLine(new Vector3(minX, 0f, lineZ), new Vector3(maxX, 0f, lineZ));
             }
+
+            Gizmos.matrix = previousMatrix;
+            Gizmos.color = previousColor;
         }
     }
 }

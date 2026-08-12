@@ -11,8 +11,7 @@ namespace SCJam.Tests.VehicleSystem
     {
         private static BoardGrid CreateGrid(int width, int height)
         {
-            ParkingBoardData boardData = new(width, height, GridDirection.Right);
-            return new BoardGrid(boardData);
+            return new BoardGrid(width, height);
         }
 
         private static Vehicle CreateVehicle(int id, IReadOnlyList<Vector2Int> footprint, GridDirection direction)

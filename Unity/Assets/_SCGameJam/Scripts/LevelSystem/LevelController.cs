@@ -83,12 +83,11 @@ namespace SCJam.LevelSystem
 
         private void BuildBoard(LevelConfig levelConfig)
         {
-            ParkingBoardData boardData = new(levelConfig.BoardWidth, levelConfig.BoardHeight, levelConfig.ExitDirection);
-            _boardGrid = new BoardGrid(boardData);
+            _boardGrid = new BoardGrid(levelConfig.BoardWidth, levelConfig.BoardHeight);
             _movementResolver = new VehicleMovementResolver(_boardGrid);
             _waitingAreaManager = new WaitingAreaManager(levelConfig.WaitingSlotCount);
 
-            _boardView.Initialize(boardData);
+            _boardView.Initialize(_boardGrid);
         }
 
         private void SpawnVehicles(LevelConfig levelConfig)

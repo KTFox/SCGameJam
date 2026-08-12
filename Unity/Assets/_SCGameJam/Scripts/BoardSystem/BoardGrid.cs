@@ -6,19 +6,24 @@ namespace SCJam.BoardSystem
 {
     public sealed class BoardGrid
     {
-        private readonly ParkingBoardData _boardData;
+        private readonly int _width;
+        private readonly int _height;
         private readonly Dictionary<Vector2Int, int> _vehicleIdByCell = new();
         private readonly Dictionary<int, HashSet<Vector2Int>> _cellsByVehicleId = new();
 
+        public int Width => _width;
+        public int Height => _height;
 
-        public BoardGrid(ParkingBoardData boardData)
+
+        public BoardGrid(int width, int height)
         {
-            _boardData = boardData;
+            _width = width;
+            _height = height;
         }
 
         public bool IsCellInBounds(Vector2Int cell)
         {
-            return cell.x >= 0 && cell.x < _boardData.Width && cell.y >= 0 && cell.y < _boardData.Height;
+            return cell.x >= 0 && cell.x < _width && cell.y >= 0 && cell.y < _height;
         }
 
         /// <summary>
