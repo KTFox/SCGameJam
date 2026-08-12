@@ -65,7 +65,7 @@ namespace SCJam.LevelSystem
 
             BuildBoard(levelConfig);
             SpawnVehicles(levelConfig);
-            //BuildPassengerQueue(levelConfig);
+            BuildPassengerQueue(levelConfig);
             //RefreshQueueVisuals();
 
             _levelState = LevelState.Playing;

@@ -20,7 +20,10 @@ namespace SCJam.PassengerSystem
         /// Picks the best waiting vehicle among candidates via selector, then attempts to board it.
         /// Drop-in for TryBoard(Vehicle) when multiple waiting vehicles may share the front group's color.
         /// </summary>
-        public IReadOnlyList<Passenger> TryBoard(IReadOnlyList<WaitingVehicleEntry> waitingVehicles, PuzzleColor color, IWaitingVehicleSelector selector)
+        public IReadOnlyList<Passenger> TryBoard(
+            IReadOnlyList<WaitingVehicleEntry> waitingVehicles,
+            PuzzleColor color,
+            IWaitingVehicleSelector selector)
         {
             Vehicle vehicle = selector.SelectVehicle(waitingVehicles, color);
             return vehicle != null ? TryBoard(vehicle) : Array.Empty<Passenger>();
