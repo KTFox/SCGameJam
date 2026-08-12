@@ -83,12 +83,15 @@ Scripts/
 - `BoardingResolver.TryBoard(IReadOnlyList<WaitingVehicleEntry>, PuzzleColor, IWaitingVehicleSelector)` overload wires the selector in without touching the existing single-vehicle `TryBoard`
 - Fully unit-testable with synthetic fixtures, no scene needed
 
-### M5 — Data-Driven Levels & Orchestration (playable increment 3)
-- `LevelSystem/LevelConfig.cs` (ScriptableObject) — board size, vehicle placements, obstacle cells, exit direction, passenger color sequence, waiting-slot count
+### M5 — Data-Driven Levels & Orchestration (playable increment 3) ✅
+- `LevelSystem/LevelConfig.cs` (ScriptableObject) — board size, blocked cells, exit direction, `VehiclePlacement[]`, waiting-slot count, passenger color sequence
+- `LevelSystem/VehiclePlacement.cs` — per-vehicle authoring data (`VehicleConfig`, origin cell, movement direction); footprint cells are derived from origin + `VehicleConfig.FootprintSize`
 - `LevelSystem/LevelState.cs` (enum: Loading, Playing, Won)
-- `LevelSystem/LevelController.cs` — builds all systems from a `LevelConfig`, wires selection → movement, evaluates win condition, raises `OnLevelCompleted`, exposes `LoadLevel(LevelConfig)`
-- `Core/GameManager.cs` updated with `GameState` + delegation to `LevelController`
-- Human work required: place `LevelController` in `MainScene`, wire serialized references, author `LevelConfig`/`VehicleConfig` assets (AI can create the `.asset` files per the confirmed decision, but final placement/wiring in the scene is still a scene edit)
+- `LevelSystem/LevelController.cs` — builds `ParkingBoardData`/`BoardGrid`/`VehicleMovementResolver`/`WaitingAreaManager`/`PassengerQueue`/`BoardingResolver` from a `LevelConfig`; spawns vehicle/passenger views (spawning is now data-driven, superseding M2's manual scene placement); each `Update` while `Playing` matches waiting vehicles to the front passenger group via `DefaultWaitingVehicleSelector` (M4), completes boarding once boarded passengers finish animating, requests departure for `Full` vehicles, and evaluates the win condition; exposes `LoadLevel(LevelConfig)` and `OnLevelCompleted`
+- `VehicleSystem/VehicleController.cs` extended with `Full → Departing → Completed` (`RequestDepart`/`CanDepart`), releasing its waiting slot only once its footprint has fully left the slot (footprint-clear rule applied consistently)
+- `Core/GameState.cs` (enum: Boot, MainMenu, Loading, Playing, Paused, LevelComplete) + `Core/GameManager.cs` updated with delegation to `LevelController`
+- Win-condition interpretation (GDD `Overview.md` doesn't give a precise state check): "parking area cleared" = every vehicle has left the board (state is not `Parked`/`MovingToExit`); "passengers transported" = queue empty and no boarding animation in flight. Not all vehicles are required to reach `Full`/`Completed` — flag if this should be stricter.
+- Human work required: place `LevelController` in `MainScene`, wire serialized references (`BoardView`, `WaitingAreaView`, `PassengerQueueView`, spawn root transforms, passenger prefab), author `LevelConfig`/`VehicleConfig` assets, ensure car prefabs carry a `VehicleController` (added at runtime as a fallback if missing, but prefab-side is cleaner)
 
 ### M6 — UI/HUD, Audio, Juice
 - Win panel, remaining-passenger HUD, restart button

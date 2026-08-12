@@ -12,6 +12,7 @@ namespace SCJam.VehicleSystem
         // ===== Serialized Fields ===== //
 
         [SerializeField] private float _moveSpeed;
+        [SerializeField] private float _departDistance = 3f;
 
 
         // ===== Private Fields ===== //
@@ -22,6 +23,7 @@ namespace SCJam.VehicleSystem
         private VehicleMovementResolver _movementResolver;
         private WaitingAreaManager _waitingAreaManager;
         private WaitingAreaView _waitingAreaView;
+        private WaitingSlot _reservedSlot;
         private bool _isMoving;
 
 
@@ -62,11 +64,25 @@ namespace SCJam.VehicleSystem
             MoveToWaitingSlotRoutine().Forget();
         }
 
+        public bool CanDepart()
+        {
+            return !_isMoving && _vehicle.State == VehicleState.Full;
+        }
+
+        public void RequestDepart()
+        {
+            if (!CanDepart())
+                return;
+
+            DepartRoutine().Forget();
+        }
+
         private async UniTask MoveToWaitingSlotRoutine()
         {
             if (!_waitingAreaManager.TryReserveSlot(_vehicle.Id, out WaitingSlot reservedSlot))
                 return;
 
+            _reservedSlot = reservedSlot;
             _isMoving = true;
             _vehicle.ChangeState(VehicleState.MovingToExit);
 
@@ -83,6 +99,23 @@ namespace SCJam.VehicleSystem
             _waitingAreaManager.ConfirmOccupied(reservedSlot);
             _vehicle.ChangeState(VehicleState.Waiting);
             _isMoving = false;
+        }
+
+        private async UniTask DepartRoutine()
+        {
+            _isMoving = true;
+            _vehicle.ChangeState(VehicleState.Departing);
+
+            Vector3 direction = GetDirectionVector(_vehicle.MovementDirection);
+            Vector3 departPosition = transform.position + direction * (_departDistance * _boardView.CellSize);
+            await transform.DOMove(departPosition, ComputeDuration(departPosition)).SetEase(Ease.Linear).ToUniTask();
+
+            // Waiting-slot release timing follows the same footprint-clear rule as the board: released
+            // only once the vehicle has fully left the slot, not when departure starts.
+            _waitingAreaManager.ReleaseSlot(_reservedSlot);
+            _vehicle.ChangeState(VehicleState.Completed);
+            _isMoving = false;
+            gameObject.SetActive(false);
         }
 
         private Vector3 ComputeExitWorldPosition()

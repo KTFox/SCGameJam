@@ -874,6 +874,56 @@ MonoBehaviour:
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.CameraSystem.CameraController
   _mainCamera: {fileID: 330585545}
   _uiCamera: {fileID: 733034248}
+--- !u!1 &1682816971
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1682816972}
+  - component: {fileID: 1682816973}
+  m_Layer: 0
+  m_Name: LevelController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1682816972
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682816971}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1682816973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1682816971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e9d384427317405dbb71177c3b5a034, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.LevelSystem.LevelController
+  _boardView: {fileID: 0}
+  _waitingAreaView: {fileID: 0}
+  _passengerQueueView: {fileID: 0}
+  _vehicleSpawnRoot: {fileID: 0}
+  _passengerSpawnRoot: {fileID: 0}
+  _passengerPrefab: {fileID: 0}
 --- !u!1 &1830900347
 GameObject:
   m_ObjectHideFlags: 0
@@ -998,6 +1048,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SCJam.GameManager
   _mainBGM: {fileID: 11400000, guid: 6fa4933d3fd38447aa16e43524a9b061, type: 2}
+  _levelController: {fileID: 0}
+  _startingLevel: {fileID: 0}
 --- !u!1 &338605984811086072
 GameObject:
   m_ObjectHideFlags: 0
@@ -1168,6 +1220,7 @@ SceneRoots:
   - {fileID: 1830900350}
   - {fileID: 1019131993}
   - {fileID: 1944325378}
+  - {fileID: 1682816972}
   - {fileID: 1363748808}
   - {fileID: 163564707}
   - {fileID: 1128105876}
