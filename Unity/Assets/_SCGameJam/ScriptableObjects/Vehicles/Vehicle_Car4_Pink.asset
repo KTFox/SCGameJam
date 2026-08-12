@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b466f749b6ba474f974563374d2ceaf, type: 3}
+  m_Name: Vehicle_Car4_Pink
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.VehicleSystem.VehicleConfig
+  _color: 1
+  _capacity: 4
+  _footprintSize: {x: 1, y: 2}
+  _vehicleModel: {fileID: 5987375340716921602, guid: 1a29b5b56b1b4524a90258eee1a9b571, type: 3}

@@ -12,6 +12,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: Car_4Slots_Base
       objectReference: {fileID: 0}
+    - target: {fileID: 2289633119888023065, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
+      propertyPath: m_Size.x
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2289633119888023065, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
+      propertyPath: m_Size.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2289633119888023065, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
+      propertyPath: m_Size.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2289633119888023065, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
+      propertyPath: m_Center.y
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7979851542056229052, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
