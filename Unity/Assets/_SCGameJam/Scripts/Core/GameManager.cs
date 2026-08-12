@@ -1,5 +1,4 @@
 using System;
-using SCJam.AudioSystem;
 using SCJam.LevelSystem;
 using UnityEngine;
 
@@ -9,7 +8,6 @@ namespace SCJam.Core
     {
         // ===== Serialized Fields ===== //
 
-        [SerializeField] private SoundSO _mainBGM;
         [SerializeField] private LevelController _levelController;
         [SerializeField] private LevelConfig _startingLevel;
 
@@ -33,8 +31,6 @@ namespace SCJam.Core
 
         private void Start()
         {
-            AudioManager.Instance.PlaySound(_mainBGM);
-
             if (_levelController != null)
                 _levelController.OnLevelCompleted += HandleLevelCompleted;
 
