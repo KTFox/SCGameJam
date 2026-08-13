@@ -81,12 +81,13 @@ namespace SCJam.LevelSystem.Editor
         }
 
         /// <summary>
-        /// Rebuilds the passenger color sequence from the level's vehicle placements. Each placement
-        /// contributes one contiguous block sized to its vehicle's capacity and colored to match, since the
-        /// boarding rule (see BoardingResolver.TryBoard) only removes a contiguous same-color run from the
-        /// front of the queue up to a waiting vehicle's remaining capacity. Sizing every block to exactly one
-        /// vehicle's capacity guarantees that block is always fully consumable by that vehicle regardless of
-        /// arrival timing, so the level stays solvable no matter which order vehicles reach the waiting area.
+        /// Rebuilds the passenger color sequence from the level's vehicle placements. Each vehicle contributes
+        /// one passenger of its color per round, round-robining across vehicles so colors interleave instead
+        /// of arriving as one long block per vehicle. Every passenger emitted for a vehicle still counts
+        /// toward that vehicle's capacity only, so the boarding rule (see BoardingResolver.TryBoard, which
+        /// removes a contiguous same-color run from the front of the queue up to a waiting vehicle's remaining
+        /// capacity) can always fully consume that vehicle's passengers once it is waiting, keeping the level
+        /// solvable regardless of arrival timing.
         /// </summary>
         private void GenerateColorSequence()
         {
@@ -99,15 +100,26 @@ namespace SCJam.LevelSystem.Editor
                 return;
             }
 
+            List<int> remainingCapacities = placements
+                .Select(placement => Mathf.Max(1, placement.VehicleConfig.Capacity))
+                .ToList();
+
             List<PuzzleColor> colorSequence = new();
+            int remainingVehicleCount = placements.Count;
 
-            foreach (VehiclePlacement placement in placements)
+            while (remainingVehicleCount > 0)
             {
-                PuzzleColor color = placement.VehicleConfig.Color;
-                int capacity = Mathf.Max(1, placement.VehicleConfig.Capacity);
+                for (int i = 0; i < placements.Count; i++)
+                {
+                    if (remainingCapacities[i] <= 0)
+                        continue;
 
-                for (int i = 0; i < capacity; i++)
-                    colorSequence.Add(color);
+                    colorSequence.Add(placements[i].VehicleConfig.Color);
+                    remainingCapacities[i]--;
+
+                    if (remainingCapacities[i] == 0)
+                        remainingVehicleCount--;
+                }
             }
 
             _passengerColorSequenceProperty.arraySize = colorSequence.Count;

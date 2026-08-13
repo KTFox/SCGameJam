@@ -287,19 +287,19 @@ namespace SCJam.LevelSystem
             for (int i = 0; i < visibleCount; i++)
             {
                 Passenger passenger = _passengerQueue.Passengers[i];
-                Vector3 position = _passengerQueueView.GetQueueWorldPosition(i);
+                Transform queueTransform = _passengerQueueView.GetQueueTransform(i);
 
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
                 {
-                    controller.transform.position = position;
+                    controller.transform.SetPositionAndRotation(queueTransform.position, queueTransform.rotation);
                     continue;
                 }
 
-                SpawnPassengerController(passenger, position);
+                SpawnPassengerController(passenger, queueTransform);
             }
         }
 
-        private void SpawnPassengerController(Passenger passenger, Vector3 position)
+        private void SpawnPassengerController(Passenger passenger, Transform queueTransform)
         {
             if (_passengerPrefabLookup == null || !_passengerPrefabLookup.TryGetPrefab(passenger.Color, out PassengerController prefab))
             {
@@ -309,7 +309,7 @@ namespace SCJam.LevelSystem
                 return;
             }
 
-            PassengerController controller = Instantiate(prefab, position, Quaternion.identity, _passengerSpawnRoot);
+            PassengerController controller = Instantiate(prefab, queueTransform.position, queueTransform.rotation, _passengerSpawnRoot);
             controller.Initialize(passenger);
 
             _passengerControllersById[passenger.Id] = controller;
