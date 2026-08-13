@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc5aaaf29cf8143c0997dd029190787d, type: 3}
   m_Name: Level_1
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.LevelSystem.LevelConfig
-  _boardWidth: 6
-  _boardHeight: 6
+  _boardSize: {x: 6, y: 6}
+  _waitingSlotCount: 3
+  _backgroundMusic: {fileID: 11400000, guid: 6fa4933d3fd38447aa16e43524a9b061, type: 2}
   _vehiclePlacements:
   - _vehicleConfig: {fileID: 11400000, guid: f875883158fae4223a39591656d9f3ca, type: 2}
     _originCell: {x: 0, y: 0}
@@ -36,6 +37,13 @@ MonoBehaviour:
   - _vehicleConfig: {fileID: 11400000, guid: 6cd22f16af8f642c2b9e31b686f5bcbb, type: 2}
     _originCell: {x: 2, y: 5}
     _movementDirection: 3
-  _waitingSlotCount: 3
-  _passengerColorSequence: 
-  _backgroundMusic: {fileID: 11400000, guid: 6fa4933d3fd38447aa16e43524a9b061, type: 2}
+  _passengerPrefabMappings:
+  - _color: 0
+    _prefab: {fileID: 0}
+  - _color: 1
+    _prefab: {fileID: 0}
+  - _color: 2
+    _prefab: {fileID: 0}
+  - _color: 3
+    _prefab: {fileID: 0}
+  _passengerColorSequence: 02000000020000000200000002000000030000000300000003000000030000000200000002000000020000000200000002000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000001000000010000000100000003000000030000000300000003000000

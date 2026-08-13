@@ -87,7 +87,7 @@ namespace SCJam.LevelSystem
 
         private void BuildBoard(LevelConfig levelConfig)
         {
-            _boardGrid = new BoardGrid(levelConfig.BoardWidth, levelConfig.BoardHeight);
+            _boardGrid = new BoardGrid(levelConfig.BoardSize.x, levelConfig.BoardSize.y);
             _movementResolver = new VehicleMovementResolver(_boardGrid);
             _waitingAreaManager = new WaitingAreaManager(levelConfig.WaitingSlotCount);
 
