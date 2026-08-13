@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SCJam.AudioSystem;
 using SCJam.BoardSystem;
 using SCJam.Common;
 using SCJam.PassengerSystem;
@@ -22,7 +23,6 @@ namespace SCJam.LevelSystem
         [SerializeField] private PassengerQueueView _passengerQueueView;
         [SerializeField] private Transform _vehicleSpawnRoot;
         [SerializeField] private Transform _passengerSpawnRoot;
-        [SerializeField] private PassengerController _passengerPrefab;
 
 
         // ===== Private Fields ===== //
@@ -33,6 +33,7 @@ namespace SCJam.LevelSystem
         private readonly Dictionary<int, PassengerController> _passengerControllersById = new();
         private readonly Dictionary<int, List<Passenger>> _pendingBoardingByVehicleId = new();
         private readonly List<GameObject> _spawnedGameObjects = new();
+        private readonly HashSet<PuzzleColor> _loggedMissingPrefabColors = new();
 
         private LevelState _levelState;
         private BoardGrid _boardGrid;
@@ -40,6 +41,7 @@ namespace SCJam.LevelSystem
         private WaitingAreaManager _waitingAreaManager;
         private PassengerQueue _passengerQueue;
         private BoardingResolver _boardingResolver;
+        private PassengerPrefabLookup _passengerPrefabLookup;
 
 
         // ===== Public Properties ===== //
@@ -64,10 +66,12 @@ namespace SCJam.LevelSystem
 
             BuildBoard(levelConfig);
             SpawnVehicles(levelConfig);
-            //BuildPassengerQueue(levelConfig);
-            //RefreshQueueVisuals();
+            BuildPassengerPrefabLookup(levelConfig);
+            BuildPassengerQueue(levelConfig);
+            RefreshQueueVisuals();
 
             _levelState = LevelState.Playing;
+            AudioManager.Instance?.PlaySound(levelConfig.BackgroundMusic);
         }
 
         private void Update()
@@ -83,7 +87,7 @@ namespace SCJam.LevelSystem
 
         private void BuildBoard(LevelConfig levelConfig)
         {
-            _boardGrid = new BoardGrid(levelConfig.BoardWidth, levelConfig.BoardHeight);
+            _boardGrid = new BoardGrid(levelConfig.BoardSize.x, levelConfig.BoardSize.y);
             _movementResolver = new VehicleMovementResolver(_boardGrid);
             _waitingAreaManager = new WaitingAreaManager(levelConfig.WaitingSlotCount);
 
@@ -122,6 +126,18 @@ namespace SCJam.LevelSystem
                 _vehicleControllersById[vehicle.Id] = vehicleController;
                 _spawnedGameObjects.Add(vehicleController.gameObject);
             }
+        }
+
+        private void BuildPassengerPrefabLookup(LevelConfig levelConfig)
+        {
+            List<string> errors = new();
+            _passengerPrefabLookup = PassengerPrefabLookup.Build(
+                levelConfig.PassengerPrefabMappings,
+                levelConfig.PassengerColorSequence,
+                errors);
+
+            foreach (string error in errors)
+                Debug.LogError($"Level '{levelConfig.name}': {error}", this);
         }
 
         private void BuildPassengerQueue(LevelConfig levelConfig)
@@ -266,27 +282,38 @@ namespace SCJam.LevelSystem
 
         private void RefreshQueueVisuals()
         {
-            if (_passengerPrefab == null || _passengerQueueView == null)
-                return;
-
             int visibleCount = Mathf.Min(_passengerQueueView.VisiblePositionCount, _passengerQueue.Passengers.Count);
 
             for (int i = 0; i < visibleCount; i++)
             {
                 Passenger passenger = _passengerQueue.Passengers[i];
-                Vector3 position = _passengerQueueView.GetQueueWorldPosition(i);
+                Transform queueTransform = _passengerQueueView.GetQueueTransform(i);
 
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
                 {
-                    controller.transform.position = position;
+                    controller.transform.SetPositionAndRotation(queueTransform.position, queueTransform.rotation);
                     continue;
                 }
 
-                controller = Instantiate(_passengerPrefab, position, Quaternion.identity, _passengerSpawnRoot);
-                controller.Initialize(passenger);
-                _passengerControllersById[passenger.Id] = controller;
-                _spawnedGameObjects.Add(controller.gameObject);
+                SpawnPassengerController(passenger, queueTransform);
             }
+        }
+
+        private void SpawnPassengerController(Passenger passenger, Transform queueTransform)
+        {
+            if (_passengerPrefabLookup == null || !_passengerPrefabLookup.TryGetPrefab(passenger.Color, out PassengerController prefab))
+            {
+                if (_loggedMissingPrefabColors.Add(passenger.Color))
+                    Debug.LogError($"No passenger prefab available for color {passenger.Color}; passenger {passenger.Id} will not be spawned.", this);
+
+                return;
+            }
+
+            PassengerController controller = Instantiate(prefab, queueTransform.position, queueTransform.rotation, _passengerSpawnRoot);
+            controller.Initialize(passenger);
+
+            _passengerControllersById[passenger.Id] = controller;
+            _spawnedGameObjects.Add(controller.gameObject);
         }
 
         private void ClearLevel()
@@ -302,6 +329,8 @@ namespace SCJam.LevelSystem
             _vehiclesById.Clear();
             _passengerControllersById.Clear();
             _pendingBoardingByVehicleId.Clear();
+            _loggedMissingPrefabColors.Clear();
+            _passengerPrefabLookup = null;
 
             _boardGrid = null;
             _movementResolver = null;

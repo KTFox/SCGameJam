@@ -16,9 +16,9 @@ namespace SCJam.PassengerSystem
 
         // ===== Methods ===== //
 
-        public Vector3 GetQueueWorldPosition(int positionIndex)
+        public Transform GetQueueTransform(int positionIndex)
         {
-            return _queuePositionAnchors[positionIndex].position;
+            return _queuePositionAnchors[positionIndex];
         }
     }
 }
