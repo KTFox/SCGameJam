@@ -93,7 +93,8 @@ namespace SCJam.VehicleSystem
             _boardGrid.RemoveVehicle(_vehicle.Id);
             _vehicle.ClearFootprint();
 
-            Vector3 slotPosition = _waitingAreaView.GetSlotWorldPosition(reservedSlot.Index);
+            Transform slotAnchor = _waitingAreaView.GetSlotAnchor(reservedSlot.Index);
+            Vector3 slotPosition = slotAnchor.position;
             await transform.DOMove(slotPosition, ComputeDuration(slotPosition)).SetEase(Ease.Linear).ToUniTask();
 
             _waitingAreaManager.ConfirmOccupied(reservedSlot);

@@ -16,9 +16,9 @@ namespace SCJam.WaitingAreaSystem
 
         // ===== Methods ===== //
 
-        public Vector3 GetSlotWorldPosition(int slotIndex)
+        public Transform GetSlotAnchor(int slotIndex)
         {
-            return _slotAnchors[slotIndex].position;
+            return _slotAnchors[slotIndex];
         }
     }
 }
