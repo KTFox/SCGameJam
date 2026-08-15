@@ -12,7 +12,8 @@ namespace SCJam.VehicleSystem
         // ===== Serialized Fields ===== //
 
         [SerializeField] private float _moveSpeed;
-        [SerializeField] private float _departDistance = 3f;
+        [SerializeField] private float _rotateSpeed;
+        [SerializeField] private float _departDistance;
 
 
         // ===== Private Fields ===== //
@@ -87,7 +88,7 @@ namespace SCJam.VehicleSystem
             _vehicle.ChangeState(VehicleState.MovingToExit);
 
             Vector3 exitPosition = ComputeExitWorldPosition();
-            await transform.DOMove(exitPosition, ComputeDuration(exitPosition)).SetEase(Ease.Linear).ToUniTask();
+            await MoveAndFaceRoutine(exitPosition);
 
             // Footprint-clear rule: the board cells stay occupied until the vehicle has fully left them.
             _boardGrid.RemoveVehicle(_vehicle.Id);
@@ -95,7 +96,14 @@ namespace SCJam.VehicleSystem
 
             Transform slotAnchor = _waitingAreaView.GetSlotAnchor(reservedSlot.Index);
             Vector3 slotPosition = slotAnchor.position;
-            await transform.DOMove(slotPosition, ComputeDuration(slotPosition)).SetEase(Ease.Linear).ToUniTask();
+
+            Vector3 topEdgePosition = ComputeTopEdgePosition(exitPosition);
+            await MoveAndFaceRoutine(topEdgePosition);
+
+            Vector3 slotEntryPosition = ComputeSlotEntryPosition(slotAnchor);
+            await MoveAndFaceRoutine(slotEntryPosition);
+
+            await MoveAndFaceRoutine(slotPosition, slotAnchor.rotation);
 
             _waitingAreaManager.ConfirmOccupied(reservedSlot);
             _vehicle.ChangeState(VehicleState.Waiting);
@@ -126,12 +134,88 @@ namespace SCJam.VehicleSystem
             return transform.position + direction * (exitCellDistance * _boardView.CellSize);
         }
 
+        /// <summary>
+        /// Point directly above the board's top edge (local +Z boundary) sharing the given position's
+        /// local X, i.e. the lane a vehicle travels along after exiting the board.
+        /// </summary>
+        private Vector3 ComputeTopEdgePosition(Vector3 worldPosition)
+        {
+            Vector3 local = WorldToBoardLocal(worldPosition);
+            local.z = ComputeTopEdgeLocalZ();
+            return BoardLocalToWorld(local);
+        }
+
+        /// <summary>
+        /// Point on the top-edge lane where the slot's own approach axis (its local -forward, i.e. the
+        /// direction a vehicle travels to arrive facing slotAnchor.rotation) crosses the top edge. This
+        /// follows the slot's rotation rather than assuming a straight board-local projection.
+        /// </summary>
+        private Vector3 ComputeSlotEntryPosition(Transform slotAnchor)
+        {
+            float topEdgeLocalZ = ComputeTopEdgeLocalZ();
+            float slotLocalZ = WorldToBoardLocal(slotAnchor.position).z;
+            float approachLocalZ = WorldToBoardLocal(slotAnchor.position + slotAnchor.forward).z - slotLocalZ;
+
+            if (Mathf.Approximately(approachLocalZ, 0f))
+                return ComputeTopEdgePosition(slotAnchor.position);
+
+            float distanceAlongApproach = (slotLocalZ - topEdgeLocalZ) / approachLocalZ;
+            return slotAnchor.position - slotAnchor.forward * distanceAlongApproach;
+        }
+
+        private float ComputeTopEdgeLocalZ()
+        {
+            Vector3 boundaryWorldPosition = _boardView.CellToWorld(new Vector2Int(0, _boardGrid.Height));
+            return WorldToBoardLocal(boundaryWorldPosition).z;
+        }
+
+        private Vector3 WorldToBoardLocal(Vector3 worldPosition)
+        {
+            Transform gridOrigin = _boardView.GridOrigin;
+            return Quaternion.Inverse(gridOrigin.rotation) * (worldPosition - gridOrigin.position);
+        }
+
+        private Vector3 BoardLocalToWorld(Vector3 localPosition)
+        {
+            Transform gridOrigin = _boardView.GridOrigin;
+            return gridOrigin.position + gridOrigin.rotation * localPosition;
+        }
+
+        private async UniTask MoveAndFaceRoutine(Vector3 targetPosition, Quaternion? faceRotation = null)
+        {
+            Quaternion targetRotation = faceRotation ?? ComputeFacingRotation(targetPosition);
+            await UniTask.WhenAll(
+                RotateTowardsRoutine(targetRotation),
+                transform.DOMove(targetPosition, ComputeDuration(targetPosition)).SetEase(Ease.Linear).ToUniTask());
+        }
+
+        private Quaternion ComputeFacingRotation(Vector3 targetPosition)
+        {
+            Vector3 direction = targetPosition - transform.position;
+            direction.y = 0f;
+
+            return direction.sqrMagnitude < 0.0001f ? transform.rotation : Quaternion.LookRotation(direction, Vector3.up);
+        }
+
         private float ComputeDuration(Vector3 targetPosition)
         {
             if (_moveSpeed <= 0f)
                 return 0f;
 
             return Vector3.Distance(transform.position, targetPosition) / _moveSpeed;
+        }
+
+        private async UniTask RotateTowardsRoutine(Quaternion targetRotation)
+        {
+            if (_rotateSpeed <= 0f)
+            {
+                transform.rotation = targetRotation;
+                return;
+            }
+
+            float angle = Quaternion.Angle(transform.rotation, targetRotation);
+            float duration = angle / _rotateSpeed;
+            await transform.DORotateQuaternion(targetRotation, duration).SetEase(Ease.Linear).ToUniTask();
         }
 
         private Vector3 GetWorldDirectionVector(GridDirection direction)

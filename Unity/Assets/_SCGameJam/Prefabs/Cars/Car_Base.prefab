@@ -66,4 +66,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98147f9398a88428aa70aa889eb8a1f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.VehicleSystem.VehicleController
-  _moveSpeed: 5
+  _moveSpeed: 35
+  _rotateSpeed: 1000
+  _departDistance: 3
