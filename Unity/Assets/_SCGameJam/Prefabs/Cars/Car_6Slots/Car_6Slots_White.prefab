@@ -51,7 +51,7 @@ PrefabInstance:
     - target: {fileID: 4217693302060240026, guid: 52b2661053bdf1d498d63bb61289948b, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: d0d19a1a60e844dd99c338b0b77e3cdd, type: 2}
+      objectReference: {fileID: 2100000, guid: 79918628002d840c4a69d254f1327237, type: 2}
     - target: {fileID: 7499128343092902951, guid: 52b2661053bdf1d498d63bb61289948b, type: 3}
       propertyPath: m_Name
       value: Car_6Slots_White
