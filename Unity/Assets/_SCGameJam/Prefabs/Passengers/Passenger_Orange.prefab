@@ -1142,6 +1142,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 876552256335590648, guid: ac13daf2ab94344cfad3e60da8c2f26d, type: 3}
+      propertyPath: _animator
+      value: 
+      objectReference: {fileID: 7969237009954480193}
     - target: {fileID: 5703562559190758021, guid: ac13daf2ab94344cfad3e60da8c2f26d, type: 3}
       propertyPath: m_Name
       value: Passenger_Orange

@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using SCJam.AudioSystem;
 using SCJam.BoardSystem;
 using SCJam.Common;
 using SCJam.WaitingAreaSystem;
@@ -14,6 +15,11 @@ namespace SCJam.VehicleSystem
         [SerializeField] private float _moveSpeed;
         [SerializeField] private float _rotateSpeed;
         [SerializeField] private float _departDistance;
+        [SerializeField] private Transform _boardingEntry;
+        [SerializeField] private Transform[] _seatAnchors;
+        [SerializeField] private SoundSO _boardingSound;
+        [SerializeField] private float _boardingPunchScaleAmount;
+        [SerializeField] private float _boardingPunchScaleDuration;
 
 
         // ===== Private Fields ===== //
@@ -32,6 +38,7 @@ namespace SCJam.VehicleSystem
 
         public Vehicle Vehicle => _vehicle;
         public bool IsMoving => _isMoving;
+        public Vector3 BoardingEntryPosition => _boardingEntry.position;
 
 
         // ===== Methods ===== //
@@ -50,6 +57,42 @@ namespace SCJam.VehicleSystem
             _movementResolver = movementResolver;
             _waitingAreaManager = waitingAreaManager;
             _waitingAreaView = waitingAreaView;
+
+            EnsureSeatAnchorCount(vehicle.Capacity);
+        }
+
+        /// <summary>
+        /// Resizes the seat anchor array to match capacity, preserving existing references. Called from
+        /// VehicleConfig.OnValidate (via the prefab) so seats stay in sync in the editor, and again from
+        /// Initialize as a runtime safety net.
+        /// </summary>
+        public void EnsureSeatAnchorCount(int capacity)
+        {
+            if (_seatAnchors != null && _seatAnchors.Length == capacity)
+                return;
+
+            Transform[] resized = new Transform[capacity];
+            int copyCount = _seatAnchors != null ? Mathf.Min(_seatAnchors.Length, capacity) : 0;
+
+            for (int i = 0; i < copyCount; i++)
+                resized[i] = _seatAnchors[i];
+
+            _seatAnchors = resized;
+        }
+
+        public Transform GetSeatAnchor(int seatIndex)
+        {
+            return _seatAnchors[seatIndex];
+        }
+
+        /// <summary>
+        /// Called by a passenger controller once it has parented onto a seat; plays the boarding punch
+        /// and SFX on the vehicle itself.
+        /// </summary>
+        public void PlayBoardingFeedback()
+        {
+            transform.DOPunchScale(Vector3.one * _boardingPunchScaleAmount, _boardingPunchScaleDuration);
+            AudioManager.Instance.PlaySound(_boardingSound);
         }
 
         public bool CanMove()
