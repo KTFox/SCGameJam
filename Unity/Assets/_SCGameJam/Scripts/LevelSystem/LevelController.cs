@@ -182,17 +182,20 @@ namespace SCJam.LevelSystem
             if (boardedPassengers.Count == 0)
                 return;
 
-            Vector3 boardingPosition = _vehicleControllersById[selectedVehicle.Id].transform.position;
+            VehicleController vehicleController = _vehicleControllersById[selectedVehicle.Id];
+            Vector3 queueFrontPosition = _passengerQueueView.GetQueueTransform(0).position;
+            int firstSeat = selectedVehicle.OccupiedSeatCount - boardedPassengers.Count;
             List<Passenger> pending = new(boardedPassengers.Count);
 
-            foreach (Passenger passenger in boardedPassengers)
+            for (int i = 0; i < boardedPassengers.Count; i++)
             {
+                Passenger passenger = boardedPassengers[i];
                 pending.Add(passenger);
 
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController passengerController))
                 {
                     _passengerControllersById.Remove(passenger.Id);
-                    passengerController.MoveToVehicle(boardingPosition);
+                    passengerController.MoveToVehicle(vehicleController, firstSeat + i, queueFrontPosition, i);
                 }
                 else
                 {
@@ -202,7 +205,7 @@ namespace SCJam.LevelSystem
             }
 
             _pendingBoardingByVehicleId[selectedVehicle.Id] = pending;
-            RefreshQueueVisuals();
+            CompactQueueVisuals();
         }
 
         private List<WaitingVehicleEntry> BuildWaitingVehicleEntries()
@@ -284,6 +287,10 @@ namespace SCJam.LevelSystem
             OnLevelCompleted?.Invoke();
         }
 
+        /// <summary>
+        /// Initial spawn/layout of the passenger queue on level load: snaps every visible passenger
+        /// straight to its anchor since nothing is mid-walk yet.
+        /// </summary>
         private void RefreshQueueVisuals()
         {
             int visibleCount = Mathf.Min(_passengerQueueView.VisiblePositionCount, _passengerQueue.Passengers.Count);
@@ -296,6 +303,30 @@ namespace SCJam.LevelSystem
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
                 {
                     controller.transform.SetPositionAndRotation(queueTransform.position, queueTransform.rotation);
+                    continue;
+                }
+
+                SpawnPassengerController(passenger, queueTransform);
+            }
+        }
+
+        /// <summary>
+        /// Re-lays the queue out after boarding removes passengers from the front: still-Queued passengers
+        /// tween to their shifted anchor instead of snapping, and only newly-visible slots spawn a new
+        /// controller. Passengers already boarding (removed from _passengerControllersById) are untouched.
+        /// </summary>
+        private void CompactQueueVisuals()
+        {
+            int visibleCount = Mathf.Min(_passengerQueueView.VisiblePositionCount, _passengerQueue.Passengers.Count);
+
+            for (int i = 0; i < visibleCount; i++)
+            {
+                Passenger passenger = _passengerQueue.Passengers[i];
+                Transform queueTransform = _passengerQueueView.GetQueueTransform(i);
+
+                if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
+                {
+                    controller.MoveToQueueSlot(queueTransform.position, queueTransform.rotation);
                     continue;
                 }
 

@@ -27,5 +27,13 @@ namespace SCJam.VehicleSystem
         public int Capacity => _capacity;
         public Vector2Int FootprintSize => _footprintSize;
         public VehicleController Prefab => _vehicleModel;
+
+
+        // ===== Methods ===== //
+
+        private void OnValidate()
+        {
+            _vehicleModel?.EnsureSeatAnchorCount(_capacity);
+        }
     }
 }
