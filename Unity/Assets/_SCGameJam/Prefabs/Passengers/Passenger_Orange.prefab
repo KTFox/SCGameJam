@@ -1090,7 +1090,7 @@ Animator:
   m_GameObject: {fileID: 8938410619646615473}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 4fd3cdd221d2e304abcfb26f61cf4b89, type: 2}
+  m_Controller: {fileID: 9100000, guid: 5c1a53c1f4c0f0f49a06790972200acb, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1144,7 +1144,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 5703562559190758021, guid: ac13daf2ab94344cfad3e60da8c2f26d, type: 3}
       propertyPath: m_Name
-      value: Passenger_Yellow
+      value: Passenger_Orange
       objectReference: {fileID: 0}
     - target: {fileID: 8809781233229075272, guid: ac13daf2ab94344cfad3e60da8c2f26d, type: 3}
       propertyPath: m_LocalPosition.x
