@@ -81,13 +81,17 @@ namespace SCJam.LevelSystem.Editor
         }
 
         /// <summary>
-        /// Rebuilds the passenger color sequence from the level's vehicle placements. Each vehicle contributes
-        /// one passenger of its color per round, round-robining across vehicles so colors interleave instead
-        /// of arriving as one long block per vehicle. Every passenger emitted for a vehicle still counts
-        /// toward that vehicle's capacity only, so the boarding rule (see BoardingResolver.TryBoard, which
-        /// removes a contiguous same-color run from the front of the queue up to a waiting vehicle's remaining
-        /// capacity) can always fully consume that vehicle's passengers once it is waiting, keeping the level
-        /// solvable regardless of arrival timing.
+        /// Rebuilds the passenger color sequence from the level's vehicle placements. Vehicles are processed
+        /// in batches no larger than the waiting slot count: within a batch, each vehicle contributes one
+        /// passenger of its color per round, round-robining across the batch so colors interleave instead of
+        /// arriving as one long block per vehicle. A batch's passengers are fully emitted (every vehicle in
+        /// it exhausted) before the next batch's colors enter the sequence. This caps how many distinct
+        /// vehicles must be waiting at once to consume the front of the queue at waiting slot count, so the
+        /// waiting area can never end up deadlocked — full of not-yet-full vehicles with no free slot for the
+        /// vehicle whose color is next in line. Every passenger emitted for a vehicle still counts toward
+        /// that vehicle's capacity only, so the boarding rule (see BoardingResolver.TryBoard, which removes a
+        /// contiguous same-color run from the front of the queue up to a waiting vehicle's remaining
+        /// capacity) can always fully consume that vehicle's passengers once it is waiting.
         /// </summary>
         private void GenerateColorSequence()
         {
@@ -100,26 +104,13 @@ namespace SCJam.LevelSystem.Editor
                 return;
             }
 
-            List<int> remainingCapacities = placements
-                .Select(placement => Mathf.Max(1, placement.VehicleConfig.Capacity))
-                .ToList();
-
+            int waitingSlotCount = Mathf.Max(1, _waitingSlotCountProperty.intValue);
             List<PuzzleColor> colorSequence = new();
-            int remainingVehicleCount = placements.Count;
 
-            while (remainingVehicleCount > 0)
+            for (int batchStart = 0; batchStart < placements.Count; batchStart += waitingSlotCount)
             {
-                for (int i = 0; i < placements.Count; i++)
-                {
-                    if (remainingCapacities[i] <= 0)
-                        continue;
-
-                    colorSequence.Add(placements[i].VehicleConfig.Color);
-                    remainingCapacities[i]--;
-
-                    if (remainingCapacities[i] == 0)
-                        remainingVehicleCount--;
-                }
+                int batchSize = Mathf.Min(waitingSlotCount, placements.Count - batchStart);
+                AppendBatchColorSequence(placements, batchStart, batchSize, colorSequence);
             }
 
             _passengerColorSequenceProperty.arraySize = colorSequence.Count;
@@ -130,6 +121,41 @@ namespace SCJam.LevelSystem.Editor
 
             serializedObject.ApplyModifiedProperties();
             EditorUtility.SetDirty(levelConfig);
+        }
+
+        /// <summary>
+        /// Round-robins one passenger per round across the vehicles in placements[batchStart, batchStart +
+        /// batchSize), appending to colorSequence, until every vehicle in the batch has emitted its full
+        /// capacity.
+        /// </summary>
+        private static void AppendBatchColorSequence(
+            List<VehiclePlacement> placements,
+            int batchStart,
+            int batchSize,
+            List<PuzzleColor> colorSequence)
+        {
+            List<int> remainingCapacities = new(batchSize);
+            for (int i = 0; i < batchSize; i++)
+            {
+                remainingCapacities.Add(Mathf.Max(1, placements[batchStart + i].VehicleConfig.Capacity));
+            }
+
+            int remainingVehicleCount = batchSize;
+
+            while (remainingVehicleCount > 0)
+            {
+                for (int i = 0; i < batchSize; i++)
+                {
+                    if (remainingCapacities[i] <= 0)
+                        continue;
+
+                    colorSequence.Add(placements[batchStart + i].VehicleConfig.Color);
+                    remainingCapacities[i]--;
+
+                    if (remainingCapacities[i] == 0)
+                        remainingVehicleCount--;
+                }
+            }
         }
 
         /// <summary>

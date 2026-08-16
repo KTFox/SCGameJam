@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b466f749b6ba474f974563374d2ceaf, type: 3}
   m_Name: Vehicle_Car6_Pink
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.VehicleSystem.VehicleConfig
-  _color: 0
+  _color: 1
   _capacity: 6
   _footprintSize: {x: 1, y: 3}
   _vehicleModel: {fileID: 3892811842290354838, guid: d4cf9648489b81a4da432c38fc4c0a0c, type: 3}
