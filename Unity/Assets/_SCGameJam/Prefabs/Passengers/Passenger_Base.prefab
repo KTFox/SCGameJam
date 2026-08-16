@@ -136,4 +136,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42c986c7409d5944294899ab68a5a570, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.PassengerSystem.PassengerController
-  _moveSpeed: 5
+  _moveSpeed: 10

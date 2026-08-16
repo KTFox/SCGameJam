@@ -62,9 +62,9 @@ namespace SCJam.LevelSystem
                 return;
 
             TryMatchWaitingVehicleToFrontGroup();
-            //ProcessBoardingCompletions();
-            //ProcessFullVehicleDepartures();
-            //EvaluateWinCondition();
+            ProcessBoardingCompletions();
+            ProcessFullVehicleDepartures();
+            EvaluateWinCondition();
         }
 
 
