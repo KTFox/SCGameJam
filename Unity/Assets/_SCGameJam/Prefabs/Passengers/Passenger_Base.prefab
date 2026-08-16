@@ -137,8 +137,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.PassengerSystem.PassengerController
   _animator: {fileID: 0}
-  _moveSpeed: 20
-  _stepDownDistance: 2
+  _moveSpeed: 15
+  _stepDownDistance: 3
   _jumpPower: 5
-  _jumpDuration: 0.2
-  _boardStaggerDelay: 0.1
+  _jumpDuration: 0.3
+  _boardStaggerDelay: 0
