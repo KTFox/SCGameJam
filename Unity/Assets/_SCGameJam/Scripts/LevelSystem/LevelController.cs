@@ -92,6 +92,7 @@ namespace SCJam.LevelSystem
             _waitingAreaManager = new WaitingAreaManager(levelConfig.WaitingSlotCount);
 
             _boardView.Initialize(_boardGrid);
+            _waitingAreaView.ApplyActiveSlotCount(levelConfig.WaitingSlotCount);
         }
 
         private void SpawnVehicles(LevelConfig levelConfig)

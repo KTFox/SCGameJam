@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2355738684057569314}
   - component: {fileID: 8408455391129240989}
   m_Layer: 0
-  m_Name: Visual
+  m_Name: Border
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -82,7 +82,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: fd9d04aef9a54401899f4cf692604e98, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.6320754, g: 0.6320754, b: 0.6320754, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 1
@@ -100,6 +100,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1178824157656970499}
+  - component: {fileID: 3645259964667667465}
   m_Layer: 0
   m_Name: Waiting Slot
   m_TagString: Untagged
@@ -124,6 +125,22 @@ Transform:
   - {fileID: 1025543279869884198}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 70, z: 0}
+--- !u!114 &3645259964667667465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7817677844442157306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 925381d7254b75740bba9a75c13e8503, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.WaitingAreaSystem.WaitingSlotVisual
+  _border: {fileID: 8408455391129240989}
+  _lockedIcon: {fileID: 756483057061340470}
+  _normalColor: {r: 1, g: 1, b: 1, a: 1}
+  _lockedColor: {r: 0.6313726, g: 0.6313726, b: 0.6313726, a: 1}
 --- !u!1 &8872206917688842452
 GameObject:
   m_ObjectHideFlags: 0
@@ -140,7 +157,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1025543279869884198
 Transform:
   m_ObjectHideFlags: 0
@@ -149,13 +166,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8872206917688842452}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1178824157656970499}
-  m_LocalEulerAnglesHint: {x: 90, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!212 &756483057061340470
 SpriteRenderer:
   serializedVersion: 2
@@ -206,7 +223,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 5b2ede99a5ef54f83ba0be10caf1ce3b, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.6320754, g: 0.6320754, b: 0.6320754, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
