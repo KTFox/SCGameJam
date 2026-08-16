@@ -54,6 +54,20 @@ namespace SCJam.LevelSystem
         public event Action OnLevelCompleted;
 
 
+        // ===== Unity Lifecycle Methods ===== //
+
+        private void Update()
+        {
+            if (_levelState != LevelState.Playing)
+                return;
+
+            TryMatchWaitingVehicleToFrontGroup();
+            //ProcessBoardingCompletions();
+            //ProcessFullVehicleDepartures();
+            //EvaluateWinCondition();
+        }
+
+
         // ===== Methods ===== //
 
         public void LoadLevel(LevelConfig levelConfig)
@@ -72,17 +86,6 @@ namespace SCJam.LevelSystem
 
             _levelState = LevelState.Playing;
             AudioManager.Instance?.PlaySound(levelConfig.BackgroundMusic);
-        }
-
-        private void Update()
-        {
-            if (_levelState != LevelState.Playing)
-                return;
-
-            //TryMatchWaitingVehicleToFrontGroup();
-            //ProcessBoardingCompletions();
-            //ProcessFullVehicleDepartures();
-            //EvaluateWinCondition();
         }
 
         private void BuildBoard(LevelConfig levelConfig)
