@@ -76,6 +76,14 @@ MonoBehaviour:
   _boardingSound: {fileID: 11400000, guid: 20eda08e3ea1e0543a4bf11a4d20c55f, type: 2}
   _boardingPunchScaleAmount: 0.3
   _boardingPunchScaleDuration: 0.2
+  _vehicleCollisionMask:
+    serializedVersion: 2
+    m_Bits: 64
+  _bumpAdvanceDistance: 1
+  _bumpSound: {fileID: 0}
+  _bumpShakeStrength: 0.3
+  _bumpShakeDuration: 0.1
+  _bumpShakeVibrato: 30
 --- !u!1 &985200949728183731
 GameObject:
   m_ObjectHideFlags: 0

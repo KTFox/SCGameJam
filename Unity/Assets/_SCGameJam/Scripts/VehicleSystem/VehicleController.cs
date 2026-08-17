@@ -21,6 +21,12 @@ namespace SCJam.VehicleSystem
         [SerializeField] private SoundSO _boardingSound;
         [SerializeField] private float _boardingPunchScaleAmount;
         [SerializeField] private float _boardingPunchScaleDuration;
+        [SerializeField] private LayerMask _vehicleCollisionMask;
+        [SerializeField] private float _bumpAdvanceDistance;
+        [SerializeField] private SoundSO _bumpSound;
+        [SerializeField] private float _bumpShakeStrength;
+        [SerializeField] private float _bumpShakeDuration;
+        [SerializeField] private int _bumpShakeVibrato;
 
 
         // ===== Private Fields ===== //
@@ -32,6 +38,7 @@ namespace SCJam.VehicleSystem
         private WaitingAreaManager _waitingAreaManager;
         private WaitingAreaView _waitingAreaView;
         private WaitingSlot _reservedSlot;
+        private Collider _collider;
         private bool _isMoving;
         private Vector3 _originalScale;
 
@@ -60,6 +67,7 @@ namespace SCJam.VehicleSystem
             _waitingAreaManager = waitingAreaManager;
             _waitingAreaView = waitingAreaView;
             _originalScale = transform.localScale;
+            _collider = GetComponent<Collider>();
 
             EnsureSeatAnchorCount(vehicle.Capacity);
         }
@@ -101,7 +109,7 @@ namespace SCJam.VehicleSystem
 
         public bool CanMove()
         {
-            return !_isMoving && _vehicle.State == VehicleState.Parked && _movementResolver.IsPathClear(_vehicle);
+            return !_isMoving && _vehicle.State == VehicleState.Parked;
         }
 
         public void RequestMove()
@@ -109,7 +117,10 @@ namespace SCJam.VehicleSystem
             if (!CanMove())
                 return;
 
-            MoveToWaitingSlotRoutine().Forget();
+            if (_movementResolver.IsPathClear(_vehicle))
+                MoveToWaitingSlotRoutine().Forget();
+            else
+                BumpAndReverseRoutine().Forget();
         }
 
         public bool CanDepart()
@@ -155,6 +166,104 @@ namespace SCJam.VehicleSystem
             _waitingAreaManager.ConfirmOccupied(reservedSlot);
             _vehicle.ChangeState(VehicleState.Waiting);
             _isMoving = false;
+        }
+
+        /// <summary>
+        /// Blocked-path flow: the vehicle stays Parked/footprint-owned (no slot reservation, no grid
+        /// mutation) and instead advances toward the exit until its own collider actually overlaps the
+        /// first blocking vehicle's collider, shakes that vehicle, then reverses back to its start
+        /// transform. Only the vehicle currently bumping is locked (_isMoving); the blocker keeps moving
+        /// on its own logic and is only ever shaken, never repositioned by physics.
+        /// </summary>
+        private async UniTask BumpAndReverseRoutine()
+        {
+            _isMoving = true;
+            _vehicle.ChangeState(VehicleState.MovingToExit);
+
+            Vector3 startPosition = transform.position;
+            Quaternion startRotation = transform.rotation;
+
+            await AdvanceUntilBlockedRoutine(startPosition);
+            await MoveAndFaceRoutine(startPosition, startRotation);
+
+            _vehicle.ChangeState(VehicleState.Parked);
+            _isMoving = false;
+        }
+
+        /// <summary>
+        /// Advances toward the exit one frame at a time, re-checking the collider overlap after every step.
+        /// Guarantees at least _bumpAdvanceDistance of travel before a blocker can stop the vehicle, so an
+        /// already-adjacent blocker still produces a visible bump instead of the vehicle standing still.
+        /// </summary>
+        private async UniTask AdvanceUntilBlockedRoutine(Vector3 startPosition)
+        {
+            Vector3 direction = GetWorldDirectionVector(_vehicle.MovementDirection);
+            float exitDistance = Vector3.Distance(startPosition, ComputeExitWorldPosition());
+            float maxDistance = Mathf.Max(exitDistance, _bumpAdvanceDistance);
+            float travelledDistance = 0f;
+
+            while (travelledDistance < maxDistance)
+            {
+                float step = Mathf.Max(_moveSpeed * Time.deltaTime, 0f);
+                travelledDistance = Mathf.Min(travelledDistance + step, maxDistance);
+                transform.position = startPosition + direction * travelledDistance;
+
+                await UniTask.Yield();
+
+                if (travelledDistance < _bumpAdvanceDistance)
+                    continue;
+
+                VehicleController blocker = FindFirstBlockingVehicle();
+                if (blocker != null)
+                {
+                    blocker.PlayBumpedFeedback();
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Physics.OverlapBox against the vehicle's own collider bounds, restricted to _vehicleCollisionMask
+        /// and excluding self, so a bump is only ever triggered by an actual collider overlap rather than
+        /// grid-cell math. Works against the existing non-trigger colliders directly; no Rigidbody or
+        /// isTrigger change is required on the prefabs for this to function.
+        /// Returns the closest overlapping vehicle, i.e. the first one actually touched.
+        /// </summary>
+        private VehicleController FindFirstBlockingVehicle()
+        {
+            Bounds bounds = _collider.bounds;
+            Collider[] overlaps = Physics.OverlapBox(bounds.center, bounds.extents, transform.rotation, _vehicleCollisionMask, QueryTriggerInteraction.Collide);
+
+            VehicleController closestBlocker = null;
+            float closestDistanceSqr = float.MaxValue;
+
+            foreach (Collider overlap in overlaps)
+            {
+                if (overlap == _collider)
+                    continue;
+
+                if (!overlap.TryGetComponent(out VehicleController otherController) || otherController == this)
+                    continue;
+
+                float distanceSqr = (overlap.bounds.center - bounds.center).sqrMagnitude;
+                if (distanceSqr >= closestDistanceSqr)
+                    continue;
+
+                closestDistanceSqr = distanceSqr;
+                closestBlocker = otherController;
+            }
+
+            return closestBlocker;
+        }
+
+        /// <summary>
+        /// Called on the vehicle that got hit while another vehicle was bumping into it. Never called on
+        /// the vehicle currently selected/bumping, and never applies a physics push.
+        /// </summary>
+        private void PlayBumpedFeedback()
+        {
+            transform.DOShakePosition(_bumpShakeDuration, _bumpShakeStrength, _bumpShakeVibrato);
+            AudioManager.Instance.PlaySound(_bumpSound);
         }
 
         private async UniTask DepartRoutine()
