@@ -67,9 +67,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98147f9398a88428aa70aa889eb8a1f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.VehicleSystem.VehicleController
-  _moveSpeed: 35
+  _moveSpeed: 25
   _rotateSpeed: 1000
-  _departDistance: 3
+  _departReverseDistance: 5
+  _departDistance: 15
   _boardingEntry: {fileID: 1603568037048664612}
   _seatAnchors: []
   _boardingSound: {fileID: 11400000, guid: 20eda08e3ea1e0543a4bf11a4d20c55f, type: 2}

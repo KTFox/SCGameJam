@@ -14,6 +14,7 @@ namespace SCJam.VehicleSystem
 
         [SerializeField] private float _moveSpeed;
         [SerializeField] private float _rotateSpeed;
+        [SerializeField] private float _departReverseDistance;
         [SerializeField] private float _departDistance;
         [SerializeField] private Transform _boardingEntry;
         [SerializeField] private Transform[] _seatAnchors;
@@ -32,6 +33,7 @@ namespace SCJam.VehicleSystem
         private WaitingAreaView _waitingAreaView;
         private WaitingSlot _reservedSlot;
         private bool _isMoving;
+        private Vector3 _originalScale;
 
 
         // ===== Public Properties ===== //
@@ -57,6 +59,7 @@ namespace SCJam.VehicleSystem
             _movementResolver = movementResolver;
             _waitingAreaManager = waitingAreaManager;
             _waitingAreaView = waitingAreaView;
+            _originalScale = transform.localScale;
 
             EnsureSeatAnchorCount(vehicle.Capacity);
         }
@@ -91,7 +94,8 @@ namespace SCJam.VehicleSystem
         /// </summary>
         public void PlayBoardingFeedback()
         {
-            transform.DOPunchScale(Vector3.one * _boardingPunchScaleAmount, _boardingPunchScaleDuration);
+            transform.DOPunchScale(Vector3.one * _boardingPunchScaleAmount, _boardingPunchScaleDuration)
+                .OnComplete(() => transform.localScale = _originalScale);
             AudioManager.Instance.PlaySound(_boardingSound);
         }
 
@@ -158,8 +162,18 @@ namespace SCJam.VehicleSystem
             _isMoving = true;
             _vehicle.ChangeState(VehicleState.Departing);
 
-            Vector3 direction = GetWorldDirectionVector(_vehicle.MovementDirection);
-            Vector3 departPosition = transform.position + direction * (_departDistance * _boardView.CellSize);
+            // Reverse straight back without rotating; MoveAndFaceRoutine would turn the vehicle
+            // to face the destination, which means spinning 180 degrees while backing up.
+            Vector3 reversePosition = transform.position - transform.forward * _departReverseDistance;
+            await transform.DOMove(reversePosition, ComputeDuration(reversePosition)).SetEase(Ease.Linear).ToUniTask();
+
+            // The vehicle currently faces slotAnchor.rotation, which is an arbitrary designer-placed
+            // angle rather than a grid-aligned one. Turning by a relative +90 off that angle would
+            // send the vehicle off at a diagonal, so face the board's actual world-right direction instead.
+            Quaternion turnRotation = Quaternion.LookRotation(GetWorldDirectionVector(GridDirection.Right), Vector3.up);
+            await RotateTowardsRoutine(turnRotation);
+
+            Vector3 departPosition = transform.position + transform.forward * (_departDistance * _boardView.CellSize);
             await transform.DOMove(departPosition, ComputeDuration(departPosition)).SetEase(Ease.Linear).ToUniTask();
 
             // Waiting-slot release timing follows the same footprint-clear rule as the board: released
