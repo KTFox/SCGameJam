@@ -114,6 +114,13 @@ A grid-based representation is recommended because it makes level authoring, col
 - The blocked vehicle plays a bump sound and shake feedback; the vehicle currently moving is never shaken.
 - While bumping and reversing, only the vehicle performing the bump is locked from new input. Every other vehicle remains selectable.
 
+### Parking-to-Waiting-Slot Path
+After a vehicle exits the parking board (footprint cleared) and its waiting slot is reserved, it travels to that slot as follows, using board-local axes (X = left/right, Z = bottom/top of the grid):
+- If the vehicle exited moving **Down**, it first runs sideways along the row it just exited into (holding its Z from the exit), toward whichever side edge (left or right) of the board is closer to the reserved slot's local X. From there it continues as below.
+- The vehicle then runs along its current lane (holding X fixed — the side edge for a Down exit, or its exit-point X for a Left/Right/Up exit) until its local Z reaches the slot's local Z minus a fixed approach offset. The vehicle always approaches the waiting row from below, never from above or by cutting across it.
+- From that point, it moves to where the slot's own approach axis (the direction a vehicle travels to arrive facing the slot's rotation) crosses the vehicle's current lane, then follows that axis into the slot, ending facing the slot's rotation.
+- The waiting slot's approach direction is not assumed to be a straight projection along the grid axis; it follows the slot anchor's own facing.
+
 ---
 
 ## Waiting Slot

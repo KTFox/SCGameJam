@@ -21,12 +21,15 @@ namespace SCJam.VehicleSystem
         [SerializeField] private SoundSO _boardingSound;
         [SerializeField] private float _boardingPunchScaleAmount;
         [SerializeField] private float _boardingPunchScaleDuration;
+        [SerializeField] private SoundSO _fullSound;
+        [SerializeField] private ParticleSystem _fullParticle;
         [SerializeField] private LayerMask _vehicleCollisionMask;
         [SerializeField] private float _bumpAdvanceDistance;
         [SerializeField] private SoundSO _bumpSound;
         [SerializeField] private float _bumpShakeStrength;
         [SerializeField] private float _bumpShakeDuration;
         [SerializeField] private int _bumpShakeVibrato;
+        [SerializeField] private float _waitingLaneApproachOffset;
 
 
         // ===== Private Fields ===== //
@@ -107,6 +110,18 @@ namespace SCJam.VehicleSystem
             AudioManager.Instance.PlaySound(_boardingSound);
         }
 
+        /// <summary>
+        /// Called by LevelController right after the vehicle's boarding animations finish and
+        /// BoardingResolver.CompleteBoarding settles its state at VehicleState.Full.
+        /// </summary>
+        public void PlayFullFeedback()
+        {
+            AudioManager.Instance.PlaySound(_fullSound);
+
+            if (_fullParticle != null)
+                _fullParticle.Play();
+        }
+
         public bool CanMove()
         {
             return !_isMoving && _vehicle.State == VehicleState.Parked;
@@ -155,10 +170,17 @@ namespace SCJam.VehicleSystem
             Transform slotAnchor = _waitingAreaView.GetSlotAnchor(reservedSlot.Index);
             Vector3 slotPosition = slotAnchor.position;
 
-            Vector3 topEdgePosition = ComputeTopEdgePosition(exitPosition);
-            await MoveAndFaceRoutine(topEdgePosition);
+            Vector3 lanePosition = exitPosition;
+            if (_vehicle.MovementDirection == GridDirection.Down)
+            {
+                lanePosition = ComputeNearestSideEdgePosition(exitPosition, slotAnchor.position);
+                await MoveAndFaceRoutine(lanePosition);
+            }
 
-            Vector3 slotEntryPosition = ComputeSlotEntryPosition(slotAnchor);
+            Vector3 approachLanePosition = ComputeApproachLanePosition(lanePosition, slotAnchor.position);
+            await MoveAndFaceRoutine(approachLanePosition);
+
+            Vector3 slotEntryPosition = ComputeSlotEntryPosition(slotAnchor, approachLanePosition);
             await MoveAndFaceRoutine(slotEntryPosition);
 
             await MoveAndFaceRoutine(slotPosition, slotAnchor.rotation);
@@ -301,38 +323,72 @@ namespace SCJam.VehicleSystem
         }
 
         /// <summary>
-        /// Point directly above the board's top edge (local +Z boundary) sharing the given position's
-        /// local X, i.e. the lane a vehicle travels along after exiting the board.
+        /// Point on the side edge (local left/right boundary) nearest the reserved slot, sharing the
+        /// given position's local Z. Only used for MovementDirection.Down, whose exit lane runs along
+        /// the bottom of the board rather than toward a side edge.
         /// </summary>
-        private Vector3 ComputeTopEdgePosition(Vector3 worldPosition)
+        private Vector3 ComputeNearestSideEdgePosition(Vector3 worldPosition, Vector3 slotWorldPosition)
         {
+            float slotLocalX = WorldToBoardLocal(slotWorldPosition).x;
+            float leftEdgeLocalX = ComputeLeftEdgeLocalX();
+            float rightEdgeLocalX = ComputeRightEdgeLocalX();
+
+            float targetLocalX = Mathf.Abs(slotLocalX - leftEdgeLocalX) <= Mathf.Abs(rightEdgeLocalX - slotLocalX)
+                ? leftEdgeLocalX
+                : rightEdgeLocalX;
+
             Vector3 local = WorldToBoardLocal(worldPosition);
-            local.z = ComputeTopEdgeLocalZ();
+            local.x = targetLocalX;
             return BoardLocalToWorld(local);
         }
 
         /// <summary>
-        /// Point on the top-edge lane where the slot's own approach axis (its local -forward, i.e. the
-        /// direction a vehicle travels to arrive facing slotAnchor.rotation) crosses the top edge. This
-        /// follows the slot's rotation rather than assuming a straight board-local projection.
+        /// Point along the vehicle's current lane (its local X held fixed) where its local Z reaches
+        /// slotZ - _waitingLaneApproachOffset, i.e. just below the reserved slot. The vehicle always
+        /// approaches the waiting row from below.
         /// </summary>
-        private Vector3 ComputeSlotEntryPosition(Transform slotAnchor)
+        private Vector3 ComputeApproachLanePosition(Vector3 worldPosition, Vector3 slotWorldPosition)
         {
-            float topEdgeLocalZ = ComputeTopEdgeLocalZ();
+            float slotLocalZ = WorldToBoardLocal(slotWorldPosition).z;
+
+            Vector3 local = WorldToBoardLocal(worldPosition);
+            local.z = slotLocalZ - _waitingLaneApproachOffset;
+            return BoardLocalToWorld(local);
+        }
+
+        /// <summary>
+        /// Point on the approach lane (at laneWorldPosition's local Z) where the slot's own approach axis
+        /// (its local -forward, i.e. the direction a vehicle travels to arrive facing slotAnchor.rotation)
+        /// crosses that lane. This follows the slot's rotation rather than assuming a straight board-local
+        /// projection.
+        /// </summary>
+        private Vector3 ComputeSlotEntryPosition(Transform slotAnchor, Vector3 laneWorldPosition)
+        {
+            float laneLocalZ = WorldToBoardLocal(laneWorldPosition).z;
             float slotLocalZ = WorldToBoardLocal(slotAnchor.position).z;
             float approachLocalZ = WorldToBoardLocal(slotAnchor.position + slotAnchor.forward).z - slotLocalZ;
 
             if (Mathf.Approximately(approachLocalZ, 0f))
-                return ComputeTopEdgePosition(slotAnchor.position);
+            {
+                Vector3 local = WorldToBoardLocal(slotAnchor.position);
+                local.z = laneLocalZ;
+                return BoardLocalToWorld(local);
+            }
 
-            float distanceAlongApproach = (slotLocalZ - topEdgeLocalZ) / approachLocalZ;
+            float distanceAlongApproach = (slotLocalZ - laneLocalZ) / approachLocalZ;
             return slotAnchor.position - slotAnchor.forward * distanceAlongApproach;
         }
 
-        private float ComputeTopEdgeLocalZ()
+        private float ComputeLeftEdgeLocalX()
         {
-            Vector3 boundaryWorldPosition = _boardView.CellToWorld(new Vector2Int(0, _boardGrid.Height));
-            return WorldToBoardLocal(boundaryWorldPosition).z;
+            Vector3 boundaryWorldPosition = _boardView.CellToWorld(new Vector2Int(-1, 0));
+            return WorldToBoardLocal(boundaryWorldPosition).x;
+        }
+
+        private float ComputeRightEdgeLocalX()
+        {
+            Vector3 boundaryWorldPosition = _boardView.CellToWorld(new Vector2Int(_boardGrid.Width, 0));
+            return WorldToBoardLocal(boundaryWorldPosition).x;
         }
 
         private Vector3 WorldToBoardLocal(Vector3 worldPosition)
