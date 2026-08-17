@@ -17,7 +17,7 @@ The game focuses on simple interactions, spatial reasoning, and solving traffic-
 * Buses are placed in a crowded parking/traffic area.
 * Each bus has a specific color.
 * Passengers waiting outside the parking area also have colors.
-* Buses can only move when their path is not blocked.
+* A bus may always be selected while parked and idle; if its path is blocked, it bumps into the blocking bus and reverses back instead of exiting.
 * When a bus reaches the pickup area, passengers with the matching color board it.
 * The player must determine the correct order to release buses.
 * The level is completed when all required passengers are transported and the parking area is cleared.
@@ -104,6 +104,22 @@ A grid-based representation is recommended because it makes level authoring, col
 - A vehicle path is valid only when no occupied cell intersects the swept footprint of the vehicle.
 - The selected vehicle itself must be excluded from collision testing.
 - A vehicle blocks another vehicle when its footprint intersects the other vehicle's forward exit path. Removing Vehicle B may make Vehicle A movable.
+
+### Blocked-Path Bump & Reverse
+- A parked, idle vehicle may always be selected, even when its exit path is blocked.
+- If the path is clear, movement proceeds as described above: the vehicle reserves a waiting slot and exits normally.
+- If the path is blocked, the vehicle does not reserve a waiting slot and its footprint/grid cells are not changed.
+- The vehicle still moves forward along its movement direction. It stops the moment it actually touches the first blocking vehicle, then reverses back to its original position and rotation at the same speed it moved forward.
+- Only the first vehicle actually touched is affected. Vehicles further along the path are never shaken and are not considered hit.
+- The blocked vehicle plays a bump sound and shake feedback; the vehicle currently moving is never shaken.
+- While bumping and reversing, only the vehicle performing the bump is locked from new input. Every other vehicle remains selectable.
+
+### Parking-to-Waiting-Slot Path
+After a vehicle exits the parking board (footprint cleared) and its waiting slot is reserved, it travels to that slot as follows, using board-local axes (X = left/right, Z = bottom/top of the grid):
+- If the vehicle exited moving **Down**, it first runs sideways along the row it just exited into (holding its Z from the exit), toward whichever side edge (left or right) of the board is closer to the reserved slot's local X. From there it continues as below.
+- The vehicle then runs along its current lane (holding X fixed — the side edge for a Down exit, or its exit-point X for a Left/Right/Up exit) until its local Z reaches the slot's local Z minus a fixed approach offset. The vehicle always approaches the waiting row from below, never from above or by cutting across it.
+- From that point, it moves to where the slot's own approach axis (the direction a vehicle travels to arrive facing the slot's rotation) crosses the vehicle's current lane, then follows that axis into the slot, ending facing the slot's rotation.
+- The waiting slot's approach direction is not assumed to be a straight projection along the grid axis; it follows the slot anchor's own facing.
 
 ---
 

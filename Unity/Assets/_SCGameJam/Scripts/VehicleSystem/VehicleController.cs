@@ -21,6 +21,15 @@ namespace SCJam.VehicleSystem
         [SerializeField] private SoundSO _boardingSound;
         [SerializeField] private float _boardingPunchScaleAmount;
         [SerializeField] private float _boardingPunchScaleDuration;
+        [SerializeField] private SoundSO _fullSound;
+        [SerializeField] private ParticleSystem _fullParticle;
+        [SerializeField] private LayerMask _vehicleCollisionMask;
+        [SerializeField] private float _bumpAdvanceDistance;
+        [SerializeField] private SoundSO _bumpSound;
+        [SerializeField] private float _bumpShakeStrength;
+        [SerializeField] private float _bumpShakeDuration;
+        [SerializeField] private int _bumpShakeVibrato;
+        [SerializeField] private float _waitingLaneApproachOffset;
 
 
         // ===== Private Fields ===== //
@@ -32,6 +41,7 @@ namespace SCJam.VehicleSystem
         private WaitingAreaManager _waitingAreaManager;
         private WaitingAreaView _waitingAreaView;
         private WaitingSlot _reservedSlot;
+        private Collider _collider;
         private bool _isMoving;
         private Vector3 _originalScale;
 
@@ -60,6 +70,7 @@ namespace SCJam.VehicleSystem
             _waitingAreaManager = waitingAreaManager;
             _waitingAreaView = waitingAreaView;
             _originalScale = transform.localScale;
+            _collider = GetComponent<Collider>();
 
             EnsureSeatAnchorCount(vehicle.Capacity);
         }
@@ -99,9 +110,21 @@ namespace SCJam.VehicleSystem
             AudioManager.Instance.PlaySound(_boardingSound);
         }
 
+        /// <summary>
+        /// Called by LevelController right after the vehicle's boarding animations finish and
+        /// BoardingResolver.CompleteBoarding settles its state at VehicleState.Full.
+        /// </summary>
+        public void PlayFullFeedback()
+        {
+            AudioManager.Instance.PlaySound(_fullSound);
+
+            if (_fullParticle != null)
+                _fullParticle.Play();
+        }
+
         public bool CanMove()
         {
-            return !_isMoving && _vehicle.State == VehicleState.Parked && _movementResolver.IsPathClear(_vehicle);
+            return !_isMoving && _vehicle.State == VehicleState.Parked;
         }
 
         public void RequestMove()
@@ -109,7 +132,10 @@ namespace SCJam.VehicleSystem
             if (!CanMove())
                 return;
 
-            MoveToWaitingSlotRoutine().Forget();
+            if (_movementResolver.IsPathClear(_vehicle))
+                MoveToWaitingSlotRoutine().Forget();
+            else
+                BumpAndReverseRoutine().Forget();
         }
 
         public bool CanDepart()
@@ -144,10 +170,17 @@ namespace SCJam.VehicleSystem
             Transform slotAnchor = _waitingAreaView.GetSlotAnchor(reservedSlot.Index);
             Vector3 slotPosition = slotAnchor.position;
 
-            Vector3 topEdgePosition = ComputeTopEdgePosition(exitPosition);
-            await MoveAndFaceRoutine(topEdgePosition);
+            Vector3 lanePosition = exitPosition;
+            if (_vehicle.MovementDirection == GridDirection.Down)
+            {
+                lanePosition = ComputeNearestSideEdgePosition(exitPosition, slotAnchor.position);
+                await MoveAndFaceRoutine(lanePosition);
+            }
 
-            Vector3 slotEntryPosition = ComputeSlotEntryPosition(slotAnchor);
+            Vector3 approachLanePosition = ComputeApproachLanePosition(lanePosition, slotAnchor.position);
+            await MoveAndFaceRoutine(approachLanePosition);
+
+            Vector3 slotEntryPosition = ComputeSlotEntryPosition(slotAnchor, approachLanePosition);
             await MoveAndFaceRoutine(slotEntryPosition);
 
             await MoveAndFaceRoutine(slotPosition, slotAnchor.rotation);
@@ -155,6 +188,104 @@ namespace SCJam.VehicleSystem
             _waitingAreaManager.ConfirmOccupied(reservedSlot);
             _vehicle.ChangeState(VehicleState.Waiting);
             _isMoving = false;
+        }
+
+        /// <summary>
+        /// Blocked-path flow: the vehicle stays Parked/footprint-owned (no slot reservation, no grid
+        /// mutation) and instead advances toward the exit until its own collider actually overlaps the
+        /// first blocking vehicle's collider, shakes that vehicle, then reverses back to its start
+        /// transform. Only the vehicle currently bumping is locked (_isMoving); the blocker keeps moving
+        /// on its own logic and is only ever shaken, never repositioned by physics.
+        /// </summary>
+        private async UniTask BumpAndReverseRoutine()
+        {
+            _isMoving = true;
+            _vehicle.ChangeState(VehicleState.MovingToExit);
+
+            Vector3 startPosition = transform.position;
+            Quaternion startRotation = transform.rotation;
+
+            await AdvanceUntilBlockedRoutine(startPosition);
+            await MoveAndFaceRoutine(startPosition, startRotation);
+
+            _vehicle.ChangeState(VehicleState.Parked);
+            _isMoving = false;
+        }
+
+        /// <summary>
+        /// Advances toward the exit one frame at a time, re-checking the collider overlap after every step.
+        /// Guarantees at least _bumpAdvanceDistance of travel before a blocker can stop the vehicle, so an
+        /// already-adjacent blocker still produces a visible bump instead of the vehicle standing still.
+        /// </summary>
+        private async UniTask AdvanceUntilBlockedRoutine(Vector3 startPosition)
+        {
+            Vector3 direction = GetWorldDirectionVector(_vehicle.MovementDirection);
+            float exitDistance = Vector3.Distance(startPosition, ComputeExitWorldPosition());
+            float maxDistance = Mathf.Max(exitDistance, _bumpAdvanceDistance);
+            float travelledDistance = 0f;
+
+            while (travelledDistance < maxDistance)
+            {
+                float step = Mathf.Max(_moveSpeed * Time.deltaTime, 0f);
+                travelledDistance = Mathf.Min(travelledDistance + step, maxDistance);
+                transform.position = startPosition + direction * travelledDistance;
+
+                await UniTask.Yield();
+
+                if (travelledDistance < _bumpAdvanceDistance)
+                    continue;
+
+                VehicleController blocker = FindFirstBlockingVehicle();
+                if (blocker != null)
+                {
+                    blocker.PlayBumpedFeedback();
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Physics.OverlapBox against the vehicle's own collider bounds, restricted to _vehicleCollisionMask
+        /// and excluding self, so a bump is only ever triggered by an actual collider overlap rather than
+        /// grid-cell math. Works against the existing non-trigger colliders directly; no Rigidbody or
+        /// isTrigger change is required on the prefabs for this to function.
+        /// Returns the closest overlapping vehicle, i.e. the first one actually touched.
+        /// </summary>
+        private VehicleController FindFirstBlockingVehicle()
+        {
+            Bounds bounds = _collider.bounds;
+            Collider[] overlaps = Physics.OverlapBox(bounds.center, bounds.extents, transform.rotation, _vehicleCollisionMask, QueryTriggerInteraction.Collide);
+
+            VehicleController closestBlocker = null;
+            float closestDistanceSqr = float.MaxValue;
+
+            foreach (Collider overlap in overlaps)
+            {
+                if (overlap == _collider)
+                    continue;
+
+                if (!overlap.TryGetComponent(out VehicleController otherController) || otherController == this)
+                    continue;
+
+                float distanceSqr = (overlap.bounds.center - bounds.center).sqrMagnitude;
+                if (distanceSqr >= closestDistanceSqr)
+                    continue;
+
+                closestDistanceSqr = distanceSqr;
+                closestBlocker = otherController;
+            }
+
+            return closestBlocker;
+        }
+
+        /// <summary>
+        /// Called on the vehicle that got hit while another vehicle was bumping into it. Never called on
+        /// the vehicle currently selected/bumping, and never applies a physics push.
+        /// </summary>
+        private void PlayBumpedFeedback()
+        {
+            transform.DOShakePosition(_bumpShakeDuration, _bumpShakeStrength, _bumpShakeVibrato);
+            AudioManager.Instance.PlaySound(_bumpSound);
         }
 
         private async UniTask DepartRoutine()
@@ -192,38 +323,72 @@ namespace SCJam.VehicleSystem
         }
 
         /// <summary>
-        /// Point directly above the board's top edge (local +Z boundary) sharing the given position's
-        /// local X, i.e. the lane a vehicle travels along after exiting the board.
+        /// Point on the side edge (local left/right boundary) nearest the reserved slot, sharing the
+        /// given position's local Z. Only used for MovementDirection.Down, whose exit lane runs along
+        /// the bottom of the board rather than toward a side edge.
         /// </summary>
-        private Vector3 ComputeTopEdgePosition(Vector3 worldPosition)
+        private Vector3 ComputeNearestSideEdgePosition(Vector3 worldPosition, Vector3 slotWorldPosition)
         {
+            float slotLocalX = WorldToBoardLocal(slotWorldPosition).x;
+            float leftEdgeLocalX = ComputeLeftEdgeLocalX();
+            float rightEdgeLocalX = ComputeRightEdgeLocalX();
+
+            float targetLocalX = Mathf.Abs(slotLocalX - leftEdgeLocalX) <= Mathf.Abs(rightEdgeLocalX - slotLocalX)
+                ? leftEdgeLocalX
+                : rightEdgeLocalX;
+
             Vector3 local = WorldToBoardLocal(worldPosition);
-            local.z = ComputeTopEdgeLocalZ();
+            local.x = targetLocalX;
             return BoardLocalToWorld(local);
         }
 
         /// <summary>
-        /// Point on the top-edge lane where the slot's own approach axis (its local -forward, i.e. the
-        /// direction a vehicle travels to arrive facing slotAnchor.rotation) crosses the top edge. This
-        /// follows the slot's rotation rather than assuming a straight board-local projection.
+        /// Point along the vehicle's current lane (its local X held fixed) where its local Z reaches
+        /// slotZ - _waitingLaneApproachOffset, i.e. just below the reserved slot. The vehicle always
+        /// approaches the waiting row from below.
         /// </summary>
-        private Vector3 ComputeSlotEntryPosition(Transform slotAnchor)
+        private Vector3 ComputeApproachLanePosition(Vector3 worldPosition, Vector3 slotWorldPosition)
         {
-            float topEdgeLocalZ = ComputeTopEdgeLocalZ();
+            float slotLocalZ = WorldToBoardLocal(slotWorldPosition).z;
+
+            Vector3 local = WorldToBoardLocal(worldPosition);
+            local.z = slotLocalZ - _waitingLaneApproachOffset;
+            return BoardLocalToWorld(local);
+        }
+
+        /// <summary>
+        /// Point on the approach lane (at laneWorldPosition's local Z) where the slot's own approach axis
+        /// (its local -forward, i.e. the direction a vehicle travels to arrive facing slotAnchor.rotation)
+        /// crosses that lane. This follows the slot's rotation rather than assuming a straight board-local
+        /// projection.
+        /// </summary>
+        private Vector3 ComputeSlotEntryPosition(Transform slotAnchor, Vector3 laneWorldPosition)
+        {
+            float laneLocalZ = WorldToBoardLocal(laneWorldPosition).z;
             float slotLocalZ = WorldToBoardLocal(slotAnchor.position).z;
             float approachLocalZ = WorldToBoardLocal(slotAnchor.position + slotAnchor.forward).z - slotLocalZ;
 
             if (Mathf.Approximately(approachLocalZ, 0f))
-                return ComputeTopEdgePosition(slotAnchor.position);
+            {
+                Vector3 local = WorldToBoardLocal(slotAnchor.position);
+                local.z = laneLocalZ;
+                return BoardLocalToWorld(local);
+            }
 
-            float distanceAlongApproach = (slotLocalZ - topEdgeLocalZ) / approachLocalZ;
+            float distanceAlongApproach = (slotLocalZ - laneLocalZ) / approachLocalZ;
             return slotAnchor.position - slotAnchor.forward * distanceAlongApproach;
         }
 
-        private float ComputeTopEdgeLocalZ()
+        private float ComputeLeftEdgeLocalX()
         {
-            Vector3 boundaryWorldPosition = _boardView.CellToWorld(new Vector2Int(0, _boardGrid.Height));
-            return WorldToBoardLocal(boundaryWorldPosition).z;
+            Vector3 boundaryWorldPosition = _boardView.CellToWorld(new Vector2Int(-1, 0));
+            return WorldToBoardLocal(boundaryWorldPosition).x;
+        }
+
+        private float ComputeRightEdgeLocalX()
+        {
+            Vector3 boundaryWorldPosition = _boardView.CellToWorld(new Vector2Int(_boardGrid.Width, 0));
+            return WorldToBoardLocal(boundaryWorldPosition).x;
         }
 
         private Vector3 WorldToBoardLocal(Vector3 worldPosition)

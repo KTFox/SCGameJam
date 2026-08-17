@@ -79,5 +79,55 @@ namespace SCJam.Tests.VehicleSystem
 
             Assert.AreEqual(3, resolver.GetExitCellDistance(vehicle));
         }
+
+        [Test]
+        public void IsPathClear_ReturnsFalse_WhenBlockedByTheNearestOfMultipleVehiclesInThePath()
+        {
+            BoardGrid grid = CreateGrid(5, 1);
+            Vehicle mover = CreateVehicle(1, new[] { new Vector2Int(0, 0) }, GridDirection.Right);
+            Vehicle nearBlocker = CreateVehicle(2, new[] { new Vector2Int(1, 0) }, GridDirection.Up);
+            Vehicle farBlocker = CreateVehicle(3, new[] { new Vector2Int(3, 0) }, GridDirection.Up);
+            grid.PlaceVehicle(mover.Id, mover.GridFootprint);
+            grid.PlaceVehicle(nearBlocker.Id, nearBlocker.GridFootprint);
+            grid.PlaceVehicle(farBlocker.Id, farBlocker.GridFootprint);
+            VehicleMovementResolver resolver = new(grid);
+
+            Assert.IsFalse(resolver.IsPathClear(mover));
+        }
+
+        [Test]
+        public void IsPathClear_StaysBlocked_WhenOnlyTheNearestBlockerIsRemoved()
+        {
+            BoardGrid grid = CreateGrid(5, 1);
+            Vehicle mover = CreateVehicle(1, new[] { new Vector2Int(0, 0) }, GridDirection.Right);
+            Vehicle nearBlocker = CreateVehicle(2, new[] { new Vector2Int(1, 0) }, GridDirection.Up);
+            Vehicle farBlocker = CreateVehicle(3, new[] { new Vector2Int(3, 0) }, GridDirection.Up);
+            grid.PlaceVehicle(mover.Id, mover.GridFootprint);
+            grid.PlaceVehicle(nearBlocker.Id, nearBlocker.GridFootprint);
+            grid.PlaceVehicle(farBlocker.Id, farBlocker.GridFootprint);
+            VehicleMovementResolver resolver = new(grid);
+
+            grid.RemoveVehicle(nearBlocker.Id);
+
+            Assert.IsFalse(resolver.IsPathClear(mover));
+        }
+
+        [Test]
+        public void IsPathClear_ReturnsTrue_WhenAllBlockersAreRemoved()
+        {
+            BoardGrid grid = CreateGrid(5, 1);
+            Vehicle mover = CreateVehicle(1, new[] { new Vector2Int(0, 0) }, GridDirection.Right);
+            Vehicle nearBlocker = CreateVehicle(2, new[] { new Vector2Int(1, 0) }, GridDirection.Up);
+            Vehicle farBlocker = CreateVehicle(3, new[] { new Vector2Int(3, 0) }, GridDirection.Up);
+            grid.PlaceVehicle(mover.Id, mover.GridFootprint);
+            grid.PlaceVehicle(nearBlocker.Id, nearBlocker.GridFootprint);
+            grid.PlaceVehicle(farBlocker.Id, farBlocker.GridFootprint);
+            VehicleMovementResolver resolver = new(grid);
+
+            grid.RemoveVehicle(nearBlocker.Id);
+            grid.RemoveVehicle(farBlocker.Id);
+
+            Assert.IsTrue(resolver.IsPathClear(mover));
+        }
     }
 }

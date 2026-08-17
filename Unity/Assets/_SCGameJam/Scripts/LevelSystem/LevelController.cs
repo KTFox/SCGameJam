@@ -246,7 +246,12 @@ namespace SCJam.LevelSystem
             foreach (int vehicleId in completedVehicleIds)
             {
                 _pendingBoardingByVehicleId.Remove(vehicleId);
-                _boardingResolver.CompleteBoarding(_vehiclesById[vehicleId]);
+
+                Vehicle vehicle = _vehiclesById[vehicleId];
+                _boardingResolver.CompleteBoarding(vehicle);
+
+                if (vehicle.State == VehicleState.Full)
+                    _vehicleControllersById[vehicleId].PlayFullFeedback();
             }
         }
 
