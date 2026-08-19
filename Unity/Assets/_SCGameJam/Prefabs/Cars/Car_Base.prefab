@@ -80,6 +80,7 @@ MonoBehaviour:
   _boardingPunchScaleDuration: 0.2
   _fullSound: {fileID: 0}
   _fullParticle: {fileID: 6732947958310924743}
+  _dustParticle: {fileID: 2747946751121344860}
   _vehicleCollisionMask:
     serializedVersion: 2
     m_Bits: 64
@@ -180,6 +181,11 @@ PrefabInstance:
 --- !u!4 &2747946751121344858 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8236194803988548091, guid: 9fe9a8fa5f5264ad4b41c6f3fa79e2ed, type: 3}
+  m_PrefabInstance: {fileID: 6083937086067507361}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &2747946751121344860 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 8236194803988548093, guid: 9fe9a8fa5f5264ad4b41c6f3fa79e2ed, type: 3}
   m_PrefabInstance: {fileID: 6083937086067507361}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6732947958330731993

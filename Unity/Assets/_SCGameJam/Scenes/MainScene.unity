@@ -1821,7 +1821,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SCJam.GameManager
   _levelController: {fileID: 1682816973}
-  _startingLevel: {fileID: 11400000, guid: 1be9f71385a8e4628b7abb7160e7d062, type: 2}
+  _startingLevel: {fileID: 11400000, guid: 4e5ac9b9099e14928ba38a977c5ce33b, type: 2}
 --- !u!1 &1968815721
 GameObject:
   m_ObjectHideFlags: 0
