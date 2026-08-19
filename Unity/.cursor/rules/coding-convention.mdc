@@ -11,13 +11,14 @@ When implementing gameplay features, use the following priority:
 - Existing code conventions
 - Existing implementation
 If two sources conflict and the correct behavior is unclear, do not make assumptions that significantly change gameplay. Report the conflict and ask for clarification.
+Always ask for clarification on any unclear points before implementing a developer's request.
 
 # Modification Scope
 - AI assistants are allowed to modify code files only.
 - Do not modify Unity assets, scenes, prefabs, materials, animations, textures, audio files, or other project content.
 
 # Code Architecture and Layout
-- All Monobehaviour scripts should follow this order:
+- All MonoBehaviour scripts should follow this order:
     + Constants
     + Static fields
     + Serialized fields
@@ -25,7 +26,26 @@ If two sources conflict and the correct behavior is unclear, do not make assumpt
     + Public properties
     + Events
     + Methods
-- Use // ===== Region's name ===== // to split between regions. For example: // ===== Constants =====//.
+- Use `// ===== Region's name ===== //` to split between regions. For example: `// ===== Constants ===== //`.
+- Do not add empty regions.
+- Do not assign default values to serialized fields in code. Configure their values in the Unity Inspector instead.
+- Within the Methods region, use this order when applicable:
+    + Unity lifecycle methods in execution order
+    + Public methods
+    + Protected methods
+    + Private methods
+    + Event handlers
+    + Coroutine methods
+
+# Encapsulation and Serialization
+- Always declare member accessibility explicitly.
+- Prefer `[SerializeField] private` fields over public fields for Inspector references and configuration.
+- Expose state through properties or methods instead of mutable public fields.
+- Do not expose a property setter unless external mutation is intentionally supported.
+- Treat serialized field names and serialized types as persisted data.
+- Do not rename serialized fields without using `FormerlySerializedAs` or providing a migration path.
+- Do not change a serialized field's type without considering existing scenes and prefabs.
+- Preserve public APIs and serialized data unless the requested change explicitly permits breaking them.
 
 # Naming Conventions
 - Enum: should be singular.
@@ -39,12 +59,57 @@ If two sources conflict and the correct behavior is unclear, do not make assumpt
 - Coroutine Fields: suffix with "Routine".
 - Static Readonly Fields: use UPPER_SNAKE_CASE.
 - Properties: use PascalCase.
-- Events: use past tense with "On" prefix.
+- Events: use PascalCase and describe something that happened, such as `HealthChanged` or `LevelCompleted`.
+- Event-raising methods: use the `On` prefix, such as `OnHealthChanged()`.
 - Methods: use PascalCase and start with a verb whenever possible.
 - Coroutine Methods: prefix with "Co_".
 - Local Variables: use camelCase.
 
-# Code Documenations
+# Unity Lifecycle
+- Use `Awake` for internal initialization and `Start` for initialization that depends on other objects.
+- Subscribe to events in `OnEnable` and unsubscribe from them in `OnDisable`.
+- Keep event subscription and unsubscription symmetrical.
+- Do not use MonoBehaviour constructors for initialization.
+- Avoid performing gameplay initialization in `OnValidate`.
+
+# Performance
+- Avoid repeated component lookups, scene searches, LINQ, and avoidable allocations in `Update`, `LateUpdate`, and `FixedUpdate`.
+- Cache frequently used component references.
+- Use `Update` for frame-based behavior and `FixedUpdate` for physics operations.
+- Use `Time.deltaTime` or `Time.fixedDeltaTime` for time-dependent behavior where appropriate.
+- Do not optimize code without evidence outside performance-sensitive paths.
+
+# Dependencies and Null Handling
+- Validate required dependencies where they are assigned or initialized.
+- Use `RequireComponent` when a component is an unconditional dependency.
+- Do not silently ignore missing required dependencies.
+- Account for `UnityEngine.Object`'s custom null behavior when working with destroyed objects.
+
+# Coroutines and Async Code
+- Store a Coroutine reference only when it must be stopped or checked later.
+- Clear stored Coroutine references when the coroutine finishes or is stopped.
+- Stop owned coroutines when their continued execution after disable or destroy would be invalid.
+- Async methods should use the `Async` suffix, except event handlers.
+- Avoid `async void` except for event handlers required by an API.
+
+# Events
+- Use `Action` or `Action<T>` unless custom `EventArgs` semantics are required.
+- The object that declares an event is responsible for invoking it.
+- Unsubscribe event listeners when their lifetime ends.
+
+# API and State Design
+- Keep methods focused on one responsibility.
+- Prefer early returns to deeply nested conditionals.
+- Avoid boolean parameters when their meaning is unclear at the call site; prefer an enum or separate methods.
+- Do not use magic numbers or strings when the value has domain meaning.
+- Avoid introducing global mutable state unless its lifetime and ownership are explicit.
+
+# Error Handling and Logging
+- Do not catch exceptions unless the code can recover, add meaningful context, or perform required cleanup.
+- Do not leave temporary `Debug.Log` calls in production code.
+- Include relevant object or state context in warnings and errors.
+
+# Code Documentation
 - Use English for code documentations.
 - Write self-explanatory code whenever possible.
 - Do not add comments that merely restate what the code does.
