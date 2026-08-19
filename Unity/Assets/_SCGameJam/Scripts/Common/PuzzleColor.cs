@@ -5,6 +5,11 @@ namespace SCJam.Common
         Orange,
         Pink,
         White,
-        Yellow
+        Yellow,
+        Purple,
+        Green,
+        Brown,
+        Black,
+        Blue
     }
 }
