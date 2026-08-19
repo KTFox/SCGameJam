@@ -242,7 +242,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9b1be20f4bcdd46ad9f456d7de8c684f, type: 2}
+  - {fileID: 2100000, guid: c85079a1cae92428c887a252ccdb1207, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -804,7 +804,7 @@ PrefabInstance:
       objectReference: {fileID: 454453465505330978}
     - target: {fileID: 5703562559190758021, guid: ac13daf2ab94344cfad3e60da8c2f26d, type: 3}
       propertyPath: m_Name
-      value: Passenger_Yellow
+      value: Passenger_Green
       objectReference: {fileID: 0}
     - target: {fileID: 8809781233229075272, guid: ac13daf2ab94344cfad3e60da8c2f26d, type: 3}
       propertyPath: m_LocalPosition.x
