@@ -23,6 +23,7 @@ namespace SCJam.VehicleSystem
         [SerializeField] private float _boardingPunchScaleDuration;
         [SerializeField] private SoundSO _fullSound;
         [SerializeField] private ParticleSystem _fullParticle;
+        [SerializeField] private ParticleSystem _dustParticle;
         [SerializeField] private LayerMask _vehicleCollisionMask;
         [SerializeField] private float _bumpAdvanceDistance;
         [SerializeField] private SoundSO _bumpSound;
@@ -54,6 +55,16 @@ namespace SCJam.VehicleSystem
 
 
         // ===== Methods ===== //
+
+        private void Awake()
+        {
+            SetDustPlaying(false);
+        }
+
+        private void OnDisable()
+        {
+            SetDustPlaying(false);
+        }
 
         public void Initialize(
             Vehicle vehicle,
@@ -105,6 +116,8 @@ namespace SCJam.VehicleSystem
         /// </summary>
         public void PlayBoardingFeedback()
         {
+            transform.DOKill();
+            transform.localScale = _originalScale;
             transform.DOPunchScale(Vector3.one * _boardingPunchScaleAmount, _boardingPunchScaleDuration)
                 .OnComplete(() => transform.localScale = _originalScale);
             AudioManager.Instance.PlaySound(_boardingSound);
@@ -157,7 +170,7 @@ namespace SCJam.VehicleSystem
                 return;
 
             _reservedSlot = reservedSlot;
-            _isMoving = true;
+            SetIsMoving(true);
             _vehicle.ChangeState(VehicleState.MovingToExit);
 
             Vector3 exitPosition = ComputeExitWorldPosition();
@@ -187,7 +200,7 @@ namespace SCJam.VehicleSystem
 
             _waitingAreaManager.ConfirmOccupied(reservedSlot);
             _vehicle.ChangeState(VehicleState.Waiting);
-            _isMoving = false;
+            SetIsMoving(false);
         }
 
         /// <summary>
@@ -199,7 +212,7 @@ namespace SCJam.VehicleSystem
         /// </summary>
         private async UniTask BumpAndReverseRoutine()
         {
-            _isMoving = true;
+            SetIsMoving(true);
             _vehicle.ChangeState(VehicleState.MovingToExit);
 
             Vector3 startPosition = transform.position;
@@ -209,7 +222,7 @@ namespace SCJam.VehicleSystem
             await MoveAndFaceRoutine(startPosition, startRotation);
 
             _vehicle.ChangeState(VehicleState.Parked);
-            _isMoving = false;
+            SetIsMoving(false);
         }
 
         /// <summary>
@@ -290,7 +303,7 @@ namespace SCJam.VehicleSystem
 
         private async UniTask DepartRoutine()
         {
-            _isMoving = true;
+            SetIsMoving(true);
             _vehicle.ChangeState(VehicleState.Departing);
 
             // Reverse straight back without rotating; MoveAndFaceRoutine would turn the vehicle
@@ -311,8 +324,25 @@ namespace SCJam.VehicleSystem
             // only once the vehicle has fully left the slot, not when departure starts.
             _waitingAreaManager.ReleaseSlot(_reservedSlot);
             _vehicle.ChangeState(VehicleState.Completed);
-            _isMoving = false;
+            SetIsMoving(false);
             gameObject.SetActive(false);
+        }
+
+        private void SetIsMoving(bool isMoving)
+        {
+            _isMoving = isMoving;
+            SetDustPlaying(isMoving);
+        }
+
+        private void SetDustPlaying(bool isPlaying)
+        {
+            if (_dustParticle == null)
+                return;
+
+            if (isPlaying)
+                _dustParticle.Play();
+            else
+                _dustParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
         private Vector3 ComputeExitWorldPosition()
