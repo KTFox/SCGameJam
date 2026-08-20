@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e47cc2f7fc5343eaa1adafea5c89088, type: 3}
-  m_Name: BGM_Main
-  m_EditorClassIdentifier: Assembly-CSharp::SCJam.AudioSystem.SoundSO
-  audioType: 1
-  clip: {fileID: 8300000, guid: a2f60294c2d2042a8b55d7bb5372687a, type: 3}
-  loop: 1
-  volume: 0.5
+  m_Name: SFX_Lose
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.AudioSystem.SoundSO
+  audioType: 0
+  clip: {fileID: 8300000, guid: dedd4284730134b1782cc919ac6ea75e, type: 3}
+  loop: 0
+  volume: 1
   minPitch: 1
   maxPitch: 1
   playCooldown: 0.1

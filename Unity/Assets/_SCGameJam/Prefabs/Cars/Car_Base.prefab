@@ -86,6 +86,7 @@ MonoBehaviour:
     m_Bits: 64
   _bumpAdvanceDistance: 1
   _bumpSound: {fileID: 11400000, guid: 91e8dbec5e38945f5a3496b34417eef1, type: 2}
+  _selectSound: {fileID: 11400000, guid: d24946c25a4e845bb836cbcd5a57d212, type: 2}
   _bumpShakeStrength: 0.3
   _bumpShakeDuration: 0.1
   _bumpShakeVibrato: 30

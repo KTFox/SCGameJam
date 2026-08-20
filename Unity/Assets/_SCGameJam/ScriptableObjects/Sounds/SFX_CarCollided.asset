@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: SFX_CarCollided
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.AudioSystem.SoundSO
   audioType: 0
-  clip: {fileID: 8300000, guid: dc2b367f5731947ad87c0e240e17c62e, type: 3}
+  clip: {fileID: 8300000, guid: 531c61ddb33d64cc9a6ffa5f83c0f89e, type: 3}
   loop: 0
   volume: 1
   minPitch: 1
