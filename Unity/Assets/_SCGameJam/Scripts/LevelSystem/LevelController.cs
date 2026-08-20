@@ -331,9 +331,10 @@ namespace SCJam.LevelSystem
         }
 
         /// <summary>
-        /// "Stuck" lose condition: the queue can't advance because the front group's color has no
-        /// matching vehicle already in the waiting area, and the waiting area has no free slot left
-        /// for another vehicle to arrive and relieve it.
+        /// "Stuck" lose condition: the queue can't advance because every waiting slot is already
+        /// occupied by a parked vehicle, and none of those vehicles match the front group's color.
+        /// A slot that is merely Reserved (a vehicle is still on its way in) still counts as an
+        /// opportunity for the front group to be relieved, so it does not count toward "full".
         /// </summary>
         private void EvaluateLoseCondition()
         {
@@ -344,7 +345,12 @@ namespace SCJam.LevelSystem
             if (frontGroup.Count == 0)
                 return;
 
-            if (HasWaitingAvailableSlot())
+            // Passengers still mid-boarding may complete and free up a vehicle/slot once their
+            // animation finishes, so the lose check must wait for them to settle first.
+            if (_pendingBoardingByVehicleId.Count > 0)
+                return;
+
+            if (!AreAllWaitingSlotsOccupied())
                 return;
 
             if (HasWaitingVehicleOfColor(frontGroup[0].Color))
@@ -357,15 +363,15 @@ namespace SCJam.LevelSystem
             ShowLosePopup();
         }
 
-        private bool HasWaitingAvailableSlot()
+        private bool AreAllWaitingSlotsOccupied()
         {
             foreach (WaitingSlot slot in _waitingAreaManager.Slots)
             {
-                if (slot.State == WaitingSlotState.Available)
-                    return true;
+                if (slot.State != WaitingSlotState.Occupied)
+                    return false;
             }
 
-            return false;
+            return true;
         }
 
         private bool HasWaitingVehicleOfColor(PuzzleColor color)
