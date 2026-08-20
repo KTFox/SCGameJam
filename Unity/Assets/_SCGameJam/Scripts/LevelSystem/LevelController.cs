@@ -4,6 +4,7 @@ using SCJam.AudioSystem;
 using SCJam.BoardSystem;
 using SCJam.Common;
 using SCJam.PassengerSystem;
+using SCJam.UISystem;
 using SCJam.VehicleSystem;
 using SCJam.WaitingAreaSystem;
 using UnityEngine;
@@ -42,6 +43,7 @@ namespace SCJam.LevelSystem
         private PassengerQueue _passengerQueue;
         private BoardingResolver _boardingResolver;
         private PassengerPrefabLookup _passengerPrefabLookup;
+        private PopupNextLevel _openNextLevelPopup;
 
 
         // ===== Public Properties ===== //
@@ -72,6 +74,11 @@ namespace SCJam.LevelSystem
             ProcessFullVehicleDepartures();
             EvaluateWinCondition();
             EvaluateLoseCondition();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeFromResultPopup();
         }
 
 
@@ -310,6 +317,7 @@ namespace SCJam.LevelSystem
             Debug.Log("Level completed");
 
             OnLevelCompleted?.Invoke();
+            ShowNextLevelPopup();
         }
 
         /// <summary>
@@ -336,6 +344,7 @@ namespace SCJam.LevelSystem
             Debug.Log("Level failed");
 
             OnLevelFailed?.Invoke();
+            ShowLosePopup();
         }
 
         private bool HasWaitingAvailableSlot()
@@ -361,6 +370,61 @@ namespace SCJam.LevelSystem
             }
 
             return false;
+        }
+
+        private void ShowNextLevelPopup()
+        {
+            if (PopupManager.Instance == null)
+            {
+                Debug.LogError($"[{nameof(LevelController)}] Missing {nameof(PopupManager)} instance.", this);
+                return;
+            }
+
+            int completedLevel = LevelDatabase.Instance.CurrentLevelIndex;
+            bool hasNextLevel = completedLevel + 1 < LevelDatabase.Instance.LevelCount;
+            PopupNextLevelData data = new(completedLevel, hasNextLevel);
+
+            _openNextLevelPopup = PopupManager.Instance.Show<PopupNextLevel, PopupNextLevelData>(PopupId.NextLevel, data);
+            if (_openNextLevelPopup != null)
+                _openNextLevelPopup.NextLevelRequested += OnNextLevelRequested;
+        }
+
+        private void ShowLosePopup()
+        {
+            if (PopupManager.Instance == null)
+            {
+                Debug.LogError($"[{nameof(LevelController)}] Missing {nameof(PopupManager)} instance.", this);
+                return;
+            }
+
+            PopupManager.Instance.Show(PopupId.Lose);
+        }
+
+        private void UnsubscribeFromResultPopup()
+        {
+            if (_openNextLevelPopup != null)
+            {
+                _openNextLevelPopup.NextLevelRequested -= OnNextLevelRequested;
+                _openNextLevelPopup = null;
+            }
+        }
+
+        private void OnNextLevelRequested()
+        {
+            UnsubscribeFromResultPopup();
+
+            if (LevelDatabase.Instance == null)
+            {
+                Debug.LogError($"[{nameof(LevelController)}] Missing {nameof(LevelDatabase)} instance.", this);
+                return;
+            }
+
+            int nextLevelIndex = LevelDatabase.Instance.CurrentLevelIndex + 1;
+            if (nextLevelIndex >= LevelDatabase.Instance.LevelCount)
+                return;
+
+            LevelDatabase.Instance.SetCurrentLevelIndex(nextLevelIndex);
+            LoadCurrentLevel();
         }
 
         /// <summary>

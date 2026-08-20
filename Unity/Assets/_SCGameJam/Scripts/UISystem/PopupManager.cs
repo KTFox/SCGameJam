@@ -110,7 +110,12 @@ namespace SCJam.UISystem
             _dimBackground.gameObject.SetActive(hasOpenPopup);
 
             if (hasOpenPopup)
-                _dimBackground.transform.SetSiblingIndex(_popupStack.Peek().transform.GetSiblingIndex());
+            {
+                int topPopupIndex = _popupStack.Peek().transform.GetSiblingIndex();
+                int dimIndex = _dimBackground.transform.GetSiblingIndex();
+                int targetIndex = dimIndex < topPopupIndex ? topPopupIndex - 1 : topPopupIndex;
+                _dimBackground.transform.SetSiblingIndex(targetIndex);
+            }
         }
 
         private void OnPopupClosed(PopupBase popup)

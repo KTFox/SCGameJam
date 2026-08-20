@@ -118,8 +118,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd262dc403c9840aa8a7cd1f40b3b030, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.PopupManager
-  _dimBackground: {fileID: 0}
-  _registeredPopups: []
+  _dimBackground: {fileID: 2517115036771103934}
+  _registeredPopups:
+  - {fileID: 2765264632209381227}
+  - {fileID: 5387315287241448080}
+  - {fileID: 5998599869849382580}
 --- !u!1 &8317040402289091010
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,6 +290,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Popup_Setting
       objectReference: {fileID: 0}
+    - target: {fileID: 4823993361609569025, guid: 1ddf070c9eb5847af98477fc385c21cf, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -297,6 +304,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4724384735555035012, guid: 1ddf070c9eb5847af98477fc385c21cf, type: 3}
   m_PrefabInstance: {fileID: 205749369766221725}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5387315287241448080 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5195290589106785549, guid: 1ddf070c9eb5847af98477fc385c21cf, type: 3}
+  m_PrefabInstance: {fileID: 205749369766221725}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce4a93e5c1d4949dba888970466c8fcd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.PopupSetting
 --- !u!1001 &5074231314667028872
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -389,6 +407,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Popup_NextLevel
       objectReference: {fileID: 0}
+    - target: {fileID: 4823993361609569025, guid: 7e334cd3bc42f4f3cbc185c5a1ab6988, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -399,6 +421,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4724384735555035012, guid: 7e334cd3bc42f4f3cbc185c5a1ab6988, type: 3}
   m_PrefabInstance: {fileID: 5074231314667028872}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &5998599869849382580 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -7686513494166343876, guid: 7e334cd3bc42f4f3cbc185c5a1ab6988, type: 3}
+  m_PrefabInstance: {fileID: 5074231314667028872}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce9a472d43985403598e9b7d3a33742c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.PopupNextLevel
 --- !u!1001 &6123657044560970900
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -491,6 +524,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Popup_Lose
       objectReference: {fileID: 0}
+    - target: {fileID: 4823993361609569025, guid: 1d35ca3c1d14649228b1aea402596125, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -501,3 +538,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4724384735555035012, guid: 1d35ca3c1d14649228b1aea402596125, type: 3}
   m_PrefabInstance: {fileID: 6123657044560970900}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2765264632209381227 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8258379244412507135, guid: 1d35ca3c1d14649228b1aea402596125, type: 3}
+  m_PrefabInstance: {fileID: 6123657044560970900}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b3d9cfbc17f446c79c2d2f9810f1371, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.PopupLose

@@ -1,12 +1,15 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace SCJam.UISystem
 {
-    public class PopupNextLevel : PopupBase, IPopupWithData<int>
+    public class PopupNextLevel : PopupBase, IPopupWithData<PopupNextLevelData>
     {
         // ===== Serialized Fields ===== //
 
+        [SerializeField] private TextMeshProUGUI _currentLevelText;
         [SerializeField] private Button _nextLevelButton;
 
 
@@ -15,11 +18,18 @@ namespace SCJam.UISystem
         private int _completedLevel;
 
 
+        // ===== Events ===== //
+
+        public event Action NextLevelRequested;
+
+
         // ===== Methods ===== //
 
-        public void Setup(int completedLevel)
+        public void Setup(PopupNextLevelData data)
         {
-            _completedLevel = completedLevel;
+            _completedLevel = data.CompletedLevel;
+            _nextLevelButton.interactable = data.HasNextLevel;
+            _currentLevelText.text = $"Level {_completedLevel + 1}";
         }
 
         private void OnEnable()
@@ -34,6 +44,7 @@ namespace SCJam.UISystem
 
         private void OnNextLevelClicked()
         {
+            NextLevelRequested?.Invoke();
             PopupManager.Instance.Close();
         }
     }
