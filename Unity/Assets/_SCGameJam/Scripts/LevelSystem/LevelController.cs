@@ -111,7 +111,7 @@ namespace SCJam.LevelSystem
             RefreshQueueVisuals();
 
             _levelState = LevelState.Playing;
-            AudioManager.Instance?.PlaySound(levelConfig.BackgroundMusic);
+            AudioManager.Instance?.PlayMusic(levelConfig.BackgroundMusic);
         }
 
         private void BuildBoard(LevelConfig levelConfig)
