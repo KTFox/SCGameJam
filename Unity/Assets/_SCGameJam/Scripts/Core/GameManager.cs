@@ -1,5 +1,5 @@
 using System;
-using SCJam.LevelSystem;
+using SCJam.SceneSystem;
 using UnityEngine;
 
 namespace SCJam.Core
@@ -8,13 +8,11 @@ namespace SCJam.Core
     {
         // ===== Serialized Fields ===== //
 
-        [SerializeField] private LevelController _levelController;
-        [SerializeField] private LevelConfig _startingLevel;
-
 
         // ===== Private Fields ===== //
 
         private GameState _state;
+        private GameState _pendingState;
 
 
         // ===== Public Properties ===== //
@@ -29,34 +27,44 @@ namespace SCJam.Core
 
         // ===== Methods ===== //
 
+        protected override void Awake()
+        {
+            base.Awake();
+            SceneLoader.SceneLoaded += HandleSceneLoaded;
+        }
+
         private void Start()
         {
-            if (_levelController != null)
-                _levelController.OnLevelCompleted += HandleLevelCompleted;
-
-            if (_startingLevel != null)
-                LoadLevel(_startingLevel);
+            RequestSceneLoad(SceneId.Gameplay, GameState.Playing);
         }
 
-        private void LoadLevel(LevelConfig levelConfig)
+        private void OnDestroy()
         {
-            if (_levelController == null || levelConfig == null)
+            SceneLoader.SceneLoaded -= HandleSceneLoaded;
+        }
+
+        public void RequestSceneLoad(SceneId sceneId, GameState stateOnLoaded)
+        {
+            if (SceneLoader.Instance == null)
+            {
+                Debug.LogError($"[{nameof(GameManager)}] Missing {nameof(SceneLoader)} instance.", this);
                 return;
+            }
 
             ChangeState(GameState.Loading);
-            _levelController.LoadLevel(levelConfig);
-            ChangeState(GameState.Playing);
-        }
-
-        private void HandleLevelCompleted()
-        {
-            ChangeState(GameState.LevelComplete);
+            _pendingState = stateOnLoaded;
+            SceneLoader.Instance.LoadScene(sceneId);
         }
 
         private void ChangeState(GameState newState)
         {
             _state = newState;
             OnGameStateChanged?.Invoke(newState);
+        }
+
+        private void HandleSceneLoaded(SceneId sceneId)
+        {
+            ChangeState(_pendingState);
         }
     }
 }

@@ -56,6 +56,11 @@ namespace SCJam.LevelSystem
 
         // ===== Unity Lifecycle Methods ===== //
 
+        private void Start()
+        {
+            LoadCurrentLevel();
+        }
+
         private void Update()
         {
             if (_levelState != LevelState.Playing)
@@ -69,6 +74,17 @@ namespace SCJam.LevelSystem
 
 
         // ===== Methods ===== //
+
+        public void LoadCurrentLevel()
+        {
+            if (LevelDatabase.Instance == null)
+            {
+                Debug.LogError($"[{nameof(LevelController)}] Missing {nameof(LevelDatabase)} instance.", this);
+                return;
+            }
+
+            LoadLevel(LevelDatabase.Instance.CurrentLevel);
+        }
 
         public void LoadLevel(LevelConfig levelConfig)
         {
