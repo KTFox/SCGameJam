@@ -248,7 +248,7 @@ namespace SCJam.VehicleSystem
                 if (travelledDistance < _bumpAdvanceDistance)
                     continue;
 
-                VehicleController blocker = FindFirstBlockingVehicle();
+                VehicleController blocker = FindFirstBlockingVehicle(direction);
                 if (blocker != null)
                 {
                     blocker.PlayBumpedFeedback();
@@ -262,15 +262,17 @@ namespace SCJam.VehicleSystem
         /// and excluding self, so a bump is only ever triggered by an actual collider overlap rather than
         /// grid-cell math. Works against the existing non-trigger colliders directly; no Rigidbody or
         /// isTrigger change is required on the prefabs for this to function.
-        /// Returns the closest overlapping vehicle, i.e. the first one actually touched.
+        /// Overlaps are ranked by how far they sit ahead along the movement direction (not raw distance),
+        /// and anything not ahead of the vehicle is ignored, so a vehicle merely sitting alongside is never
+        /// mistaken for the one actually blocking the path.
         /// </summary>
-        private VehicleController FindFirstBlockingVehicle()
+        private VehicleController FindFirstBlockingVehicle(Vector3 direction)
         {
             Bounds bounds = _collider.bounds;
             Collider[] overlaps = Physics.OverlapBox(bounds.center, bounds.extents, transform.rotation, _vehicleCollisionMask, QueryTriggerInteraction.Collide);
 
             VehicleController closestBlocker = null;
-            float closestDistanceSqr = float.MaxValue;
+            float closestForwardDistance = float.MaxValue;
 
             foreach (Collider overlap in overlaps)
             {
@@ -280,11 +282,14 @@ namespace SCJam.VehicleSystem
                 if (!overlap.TryGetComponent(out VehicleController otherController) || otherController == this)
                     continue;
 
-                float distanceSqr = (overlap.bounds.center - bounds.center).sqrMagnitude;
-                if (distanceSqr >= closestDistanceSqr)
+                float forwardDistance = Vector3.Dot(overlap.bounds.center - bounds.center, direction);
+                if (forwardDistance <= 0f)
                     continue;
 
-                closestDistanceSqr = distanceSqr;
+                if (forwardDistance >= closestForwardDistance)
+                    continue;
+
+                closestForwardDistance = forwardDistance;
                 closestBlocker = otherController;
             }
 
