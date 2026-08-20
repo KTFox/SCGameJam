@@ -54,6 +54,22 @@ namespace SCJam.UISystem
                 OpenPopup(popup);
         }
 
+        public TPopup Show<TPopup>(PopupId popupId) where TPopup : PopupBase
+        {
+            if (!TryGetPopup(popupId, out PopupBase popup))
+                return null;
+
+            if (popup is not TPopup typedPopup)
+            {
+                Debug.LogWarning($"[{nameof(PopupManager)}] Popup registered for id '{popupId}' is not of type '{typeof(TPopup).Name}'.", popup);
+                return null;
+            }
+
+            OpenPopup(popup);
+
+            return typedPopup;
+        }
+
         public TPopup Show<TPopup, TData>(PopupId popupId, TData data) where TPopup : PopupBase, IPopupWithData<TData>
         {
             if (!TryGetPopup(popupId, out PopupBase popup))

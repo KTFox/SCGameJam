@@ -44,6 +44,7 @@ namespace SCJam.LevelSystem
         private BoardingResolver _boardingResolver;
         private PassengerPrefabLookup _passengerPrefabLookup;
         private PopupNextLevel _openNextLevelPopup;
+        private PopupLose _openLosePopup;
 
 
         // ===== Public Properties ===== //
@@ -413,7 +414,12 @@ namespace SCJam.LevelSystem
                 return;
             }
 
-            PopupManager.Instance.Show(PopupId.Lose);
+            _openLosePopup = PopupManager.Instance.Show<PopupLose>(PopupId.Lose);
+            if (_openLosePopup != null)
+            {
+                _openLosePopup.RetryRequested += OnRetryRequested;
+                _openLosePopup.QuitRequested += OnQuitRequested;
+            }
         }
 
         private void UnsubscribeFromResultPopup()
@@ -422,6 +428,13 @@ namespace SCJam.LevelSystem
             {
                 _openNextLevelPopup.NextLevelRequested -= OnNextLevelRequested;
                 _openNextLevelPopup = null;
+            }
+
+            if (_openLosePopup != null)
+            {
+                _openLosePopup.RetryRequested -= OnRetryRequested;
+                _openLosePopup.QuitRequested -= OnQuitRequested;
+                _openLosePopup = null;
             }
         }
 
@@ -441,6 +454,23 @@ namespace SCJam.LevelSystem
 
             LevelDatabase.Instance.SetCurrentLevelIndex(nextLevelIndex);
             LoadCurrentLevel();
+        }
+
+        private void OnRetryRequested()
+        {
+            UnsubscribeFromResultPopup();
+            LoadCurrentLevel();
+        }
+
+        private void OnQuitRequested()
+        {
+            UnsubscribeFromResultPopup();
+
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         /// <summary>
