@@ -52,6 +52,7 @@ namespace SCJam.LevelSystem
         // ===== Events ===== //
 
         public event Action OnLevelCompleted;
+        public event Action OnLevelFailed;
 
 
         // ===== Unity Lifecycle Methods ===== //
@@ -70,6 +71,7 @@ namespace SCJam.LevelSystem
             ProcessBoardingCompletions();
             ProcessFullVehicleDepartures();
             EvaluateWinCondition();
+            EvaluateLoseCondition();
         }
 
 
@@ -305,7 +307,60 @@ namespace SCJam.LevelSystem
             }
 
             _levelState = LevelState.Won;
+            Debug.Log("Level completed");
+
             OnLevelCompleted?.Invoke();
+        }
+
+        /// <summary>
+        /// "Stuck" lose condition: the queue can't advance because the front group's color has no
+        /// matching vehicle already in the waiting area, and the waiting area has no free slot left
+        /// for another vehicle to arrive and relieve it.
+        /// </summary>
+        private void EvaluateLoseCondition()
+        {
+            if (_passengerQueue.Passengers.Count == 0)
+                return;
+
+            IReadOnlyList<Passenger> frontGroup = _passengerQueue.GetAccessibleFrontGroup();
+            if (frontGroup.Count == 0)
+                return;
+
+            if (HasWaitingAvailableSlot())
+                return;
+
+            if (HasWaitingVehicleOfColor(frontGroup[0].Color))
+                return;
+
+            _levelState = LevelState.Lost;
+            Debug.Log("Level failed");
+
+            OnLevelFailed?.Invoke();
+        }
+
+        private bool HasWaitingAvailableSlot()
+        {
+            foreach (WaitingSlot slot in _waitingAreaManager.Slots)
+            {
+                if (slot.State == WaitingSlotState.Available)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool HasWaitingVehicleOfColor(PuzzleColor color)
+        {
+            foreach (WaitingSlot slot in _waitingAreaManager.Slots)
+            {
+                if (slot.State != WaitingSlotState.Occupied || slot.VehicleId == null)
+                    continue;
+
+                if (_vehiclesById.TryGetValue(slot.VehicleId.Value, out Vehicle vehicle) && vehicle.Color == color)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
