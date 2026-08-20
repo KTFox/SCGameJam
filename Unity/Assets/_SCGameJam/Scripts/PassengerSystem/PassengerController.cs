@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using SCJam.VehicleSystem;
@@ -32,6 +33,7 @@ namespace SCJam.PassengerSystem
         private int _currentQueueSlotIndex;
         private int _targetQueueSlotIndex;
         private PassengerQueueView _queueView;
+        private CancellationToken _destroyCancellationToken;
 
 
         // ===== Public Properties ===== //
@@ -47,6 +49,11 @@ namespace SCJam.PassengerSystem
 
 
         // ===== Methods ===== //
+
+        private void Awake()
+        {
+            _destroyCancellationToken = this.GetCancellationTokenOnDestroy();
+        }
 
         public void Initialize(Passenger passenger, PassengerQueueView queueView)
         {
@@ -78,15 +85,15 @@ namespace SCJam.PassengerSystem
             if (_isBoarding || _passenger.State != PassengerState.MovingToVehicle)
                 return;
 
-            BoardVehicleRoutine(vehicleController, seatIndex, queueFrontPosition, indexInGroup).Forget();
+            BoardVehicleRoutine(vehicleController, seatIndex, queueFrontPosition, indexInGroup).Forget(HandleRoutineException);
         }
 
-        private async UniTaskVoid BoardVehicleRoutine(VehicleController vehicleController, int seatIndex, Vector3 queueFrontPosition, int indexInGroup)
+        private async UniTask BoardVehicleRoutine(VehicleController vehicleController, int seatIndex, Vector3 queueFrontPosition, int indexInGroup)
         {
             _isBoarding = true;
 
             if (indexInGroup > 0 && _boardStaggerDelay > 0f)
-                await UniTask.Delay(TimeSpan.FromSeconds(indexInGroup * _boardStaggerDelay));
+                await UniTask.Delay(TimeSpan.FromSeconds(indexInGroup * _boardStaggerDelay), cancellationToken: _destroyCancellationToken);
 
             SetIsMoving(true);
 
@@ -114,7 +121,8 @@ namespace SCJam.PassengerSystem
                 return;
 
             transform.rotation = ComputeFacingRotation(targetPosition);
-            await transform.DOMove(targetPosition, ComputeDuration(targetPosition)).SetEase(Ease.Linear).ToUniTask();
+            await transform.DOMove(targetPosition, ComputeDuration(targetPosition)).SetEase(Ease.Linear)
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
         }
 
         private async UniTask JumpToSeatRoutine(VehicleController vehicleController, int seatIndex)
@@ -122,9 +130,9 @@ namespace SCJam.PassengerSystem
             Transform seat = vehicleController.GetSeatAnchor(seatIndex);
 
             await UniTask.WhenAll(
-                transform.DOJump(seat.position, _jumpPower, 1, _jumpDuration).ToUniTask(),
-                transform.DORotateQuaternion(seat.rotation, _jumpDuration).ToUniTask(),
-                transform.DOScale(seat.lossyScale, _jumpDuration).ToUniTask());
+                transform.DOJump(seat.position, _jumpPower, 1, _jumpDuration).ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken),
+                transform.DORotateQuaternion(seat.rotation, _jumpDuration).ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken),
+                transform.DOScale(seat.lossyScale, _jumpDuration).ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken));
 
             transform.SetParent(seat, true);
             transform.localPosition = Vector3.zero;
@@ -151,10 +159,10 @@ namespace SCJam.PassengerSystem
             if (_isSteppingThroughQueue)
                 return;
 
-            StepThroughQueueRoutine().Forget();
+            StepThroughQueueRoutine().Forget(HandleRoutineException);
         }
 
-        private async UniTaskVoid StepThroughQueueRoutine()
+        private async UniTask StepThroughQueueRoutine()
         {
             _isSteppingThroughQueue = true;
             SetIsMoving(true);
@@ -193,6 +201,16 @@ namespace SCJam.PassengerSystem
                 return 0f;
 
             return Vector3.Distance(transform.position, targetPosition) / _moveSpeed;
+        }
+
+        /// <summary>
+        /// Cancellation from GetCancellationTokenOnDestroy is expected whenever a level transition destroys
+        /// this passenger mid-routine, so it is swallowed here instead of surfacing as an unobserved exception.
+        /// </summary>
+        private static void HandleRoutineException(Exception exception)
+        {
+            if (exception is not OperationCanceledException)
+                Debug.LogException(exception);
         }
     }
 }
