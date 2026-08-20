@@ -42,10 +42,36 @@ namespace SCJam.Tests.WaitingAreaSystem
         }
 
         [Test]
-        public void SelectVehicle_IgnoresVehiclesThatAreNotWaiting()
+        public void SelectVehicle_IgnoresVehiclesThatAreNeitherWaitingNorBoarding()
         {
-            Vehicle notWaiting = new(1, PuzzleColor.Orange, 4, new[] { new Vector2Int(0, 0) }, GridDirection.Right);
-            WaitingVehicleEntry[] entries = { new(notWaiting, CreateOccupiedSlot(0, 0)) };
+            Vehicle parked = new(1, PuzzleColor.Orange, 4, new[] { new Vector2Int(0, 0) }, GridDirection.Right);
+            WaitingVehicleEntry[] entries = { new(parked, CreateOccupiedSlot(0, 0)) };
+            DefaultWaitingVehicleSelector selector = new();
+
+            Vehicle selected = selector.SelectVehicle(entries, PuzzleColor.Orange);
+
+            Assert.IsNull(selected);
+        }
+
+        [Test]
+        public void SelectVehicle_AcceptsBoardingVehicle_WhenSeatsRemainFree()
+        {
+            Vehicle boarding = CreateWaitingVehicle(1, PuzzleColor.Orange, occupiedSeatCount: 1);
+            boarding.ChangeState(VehicleState.Boarding);
+            WaitingVehicleEntry[] entries = { new(boarding, CreateOccupiedSlot(0, 0)) };
+            DefaultWaitingVehicleSelector selector = new();
+
+            Vehicle selected = selector.SelectVehicle(entries, PuzzleColor.Orange);
+
+            Assert.AreEqual(boarding.Id, selected.Id);
+        }
+
+        [Test]
+        public void SelectVehicle_IgnoresBoardingVehicle_WhenNoSeatsRemainFree()
+        {
+            Vehicle boardingFull = CreateWaitingVehicle(1, PuzzleColor.Orange, occupiedSeatCount: 4);
+            boardingFull.ChangeState(VehicleState.Boarding);
+            WaitingVehicleEntry[] entries = { new(boardingFull, CreateOccupiedSlot(0, 0)) };
             DefaultWaitingVehicleSelector selector = new();
 
             Vehicle selected = selector.SelectVehicle(entries, PuzzleColor.Orange);

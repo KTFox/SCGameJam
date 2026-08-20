@@ -4,6 +4,7 @@ using SCJam.AudioSystem;
 using SCJam.BoardSystem;
 using SCJam.Common;
 using SCJam.PassengerSystem;
+using SCJam.UISystem;
 using SCJam.VehicleSystem;
 using SCJam.WaitingAreaSystem;
 using UnityEngine;
@@ -42,6 +43,8 @@ namespace SCJam.LevelSystem
         private PassengerQueue _passengerQueue;
         private BoardingResolver _boardingResolver;
         private PassengerPrefabLookup _passengerPrefabLookup;
+        private PopupNextLevel _openNextLevelPopup;
+        private PopupLose _openLosePopup;
 
 
         // ===== Public Properties ===== //
@@ -72,6 +75,11 @@ namespace SCJam.LevelSystem
             ProcessFullVehicleDepartures();
             EvaluateWinCondition();
             EvaluateLoseCondition();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeFromResultPopup();
         }
 
 
@@ -188,6 +196,12 @@ namespace SCJam.LevelSystem
             if (frontGroup.Count == 0)
                 return;
 
+            // The front passenger must have physically finished walking into queue slot 0 before it can be
+            // matched — boarding may never pull a passenger that's still mid-step between queue slots.
+            if (_passengerControllersById.TryGetValue(frontGroup[0].Id, out PassengerController frontController)
+                && !frontController.IsSettledAtQueueFront)
+                return;
+
             List<WaitingVehicleEntry> entries = BuildWaitingVehicleEntries();
             if (entries.Count == 0)
                 return;
@@ -203,7 +217,12 @@ namespace SCJam.LevelSystem
             VehicleController vehicleController = _vehicleControllersById[selectedVehicle.Id];
             Vector3 queueFrontPosition = _passengerQueueView.GetQueueTransform(0).position;
             int firstSeat = selectedVehicle.OccupiedSeatCount - boardedPassengers.Count;
-            List<Passenger> pending = new(boardedPassengers.Count);
+
+            if (!_pendingBoardingByVehicleId.TryGetValue(selectedVehicle.Id, out List<Passenger> pending))
+            {
+                pending = new List<Passenger>(boardedPassengers.Count);
+                _pendingBoardingByVehicleId[selectedVehicle.Id] = pending;
+            }
 
             for (int i = 0; i < boardedPassengers.Count; i++)
             {
@@ -222,7 +241,6 @@ namespace SCJam.LevelSystem
                 }
             }
 
-            _pendingBoardingByVehicleId[selectedVehicle.Id] = pending;
             CompactQueueVisuals();
         }
 
@@ -310,12 +328,14 @@ namespace SCJam.LevelSystem
             Debug.Log("Level completed");
 
             OnLevelCompleted?.Invoke();
+            ShowNextLevelPopup();
         }
 
         /// <summary>
-        /// "Stuck" lose condition: the queue can't advance because the front group's color has no
-        /// matching vehicle already in the waiting area, and the waiting area has no free slot left
-        /// for another vehicle to arrive and relieve it.
+        /// "Stuck" lose condition: the queue can't advance because every waiting slot is already
+        /// occupied by a parked vehicle, and none of those vehicles match the front group's color.
+        /// A slot that is merely Reserved (a vehicle is still on its way in) still counts as an
+        /// opportunity for the front group to be relieved, so it does not count toward "full".
         /// </summary>
         private void EvaluateLoseCondition()
         {
@@ -326,7 +346,12 @@ namespace SCJam.LevelSystem
             if (frontGroup.Count == 0)
                 return;
 
-            if (HasWaitingAvailableSlot())
+            // Passengers still mid-boarding may complete and free up a vehicle/slot once their
+            // animation finishes, so the lose check must wait for them to settle first.
+            if (_pendingBoardingByVehicleId.Count > 0)
+                return;
+
+            if (!AreAllWaitingSlotsOccupied())
                 return;
 
             if (HasWaitingVehicleOfColor(frontGroup[0].Color))
@@ -336,17 +361,18 @@ namespace SCJam.LevelSystem
             Debug.Log("Level failed");
 
             OnLevelFailed?.Invoke();
+            ShowLosePopup();
         }
 
-        private bool HasWaitingAvailableSlot()
+        private bool AreAllWaitingSlotsOccupied()
         {
             foreach (WaitingSlot slot in _waitingAreaManager.Slots)
             {
-                if (slot.State == WaitingSlotState.Available)
-                    return true;
+                if (slot.State != WaitingSlotState.Occupied)
+                    return false;
             }
 
-            return false;
+            return true;
         }
 
         private bool HasWaitingVehicleOfColor(PuzzleColor color)
@@ -363,6 +389,90 @@ namespace SCJam.LevelSystem
             return false;
         }
 
+        private void ShowNextLevelPopup()
+        {
+            if (PopupManager.Instance == null)
+            {
+                Debug.LogError($"[{nameof(LevelController)}] Missing {nameof(PopupManager)} instance.", this);
+                return;
+            }
+
+            int completedLevel = LevelDatabase.Instance.CurrentLevelIndex;
+            bool hasNextLevel = completedLevel + 1 < LevelDatabase.Instance.LevelCount;
+            PopupNextLevelData data = new(completedLevel, hasNextLevel);
+
+            _openNextLevelPopup = PopupManager.Instance.Show<PopupNextLevel, PopupNextLevelData>(PopupId.NextLevel, data);
+            if (_openNextLevelPopup != null)
+                _openNextLevelPopup.NextLevelRequested += OnNextLevelRequested;
+        }
+
+        private void ShowLosePopup()
+        {
+            if (PopupManager.Instance == null)
+            {
+                Debug.LogError($"[{nameof(LevelController)}] Missing {nameof(PopupManager)} instance.", this);
+                return;
+            }
+
+            _openLosePopup = PopupManager.Instance.Show<PopupLose>(PopupId.Lose);
+            if (_openLosePopup != null)
+            {
+                _openLosePopup.RetryRequested += OnRetryRequested;
+                _openLosePopup.QuitRequested += OnQuitRequested;
+            }
+        }
+
+        private void UnsubscribeFromResultPopup()
+        {
+            if (_openNextLevelPopup != null)
+            {
+                _openNextLevelPopup.NextLevelRequested -= OnNextLevelRequested;
+                _openNextLevelPopup = null;
+            }
+
+            if (_openLosePopup != null)
+            {
+                _openLosePopup.RetryRequested -= OnRetryRequested;
+                _openLosePopup.QuitRequested -= OnQuitRequested;
+                _openLosePopup = null;
+            }
+        }
+
+        private void OnNextLevelRequested()
+        {
+            UnsubscribeFromResultPopup();
+
+            if (LevelDatabase.Instance == null)
+            {
+                Debug.LogError($"[{nameof(LevelController)}] Missing {nameof(LevelDatabase)} instance.", this);
+                return;
+            }
+
+            int nextLevelIndex = LevelDatabase.Instance.CurrentLevelIndex + 1;
+            if (nextLevelIndex >= LevelDatabase.Instance.LevelCount)
+                return;
+
+            LevelDatabase.Instance.SetCurrentLevelIndex(nextLevelIndex);
+            LoadCurrentLevel();
+        }
+
+        private void OnRetryRequested()
+        {
+            UnsubscribeFromResultPopup();
+            LoadCurrentLevel();
+        }
+
+        private void OnQuitRequested()
+        {
+            UnsubscribeFromResultPopup();
+
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         /// <summary>
         /// Initial spawn/layout of the passenger queue on level load: snaps every visible passenger
         /// straight to its anchor since nothing is mid-walk yet.
@@ -374,22 +484,22 @@ namespace SCJam.LevelSystem
             for (int i = 0; i < visibleCount; i++)
             {
                 Passenger passenger = _passengerQueue.Passengers[i];
-                Transform queueTransform = _passengerQueueView.GetQueueTransform(i);
 
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
                 {
-                    controller.transform.SetPositionAndRotation(queueTransform.position, queueTransform.rotation);
+                    controller.SnapToQueueSlot(i);
                     continue;
                 }
 
-                SpawnPassengerController(passenger, queueTransform);
+                SpawnPassengerController(passenger, i);
             }
         }
 
         /// <summary>
-        /// Re-lays the queue out after boarding removes passengers from the front: still-Queued passengers
-        /// tween to their shifted anchor instead of snapping, and only newly-visible slots spawn a new
-        /// controller. Passengers already boarding (removed from _passengerControllersById) are untouched.
+        /// Re-lays the queue out after boarding removes a passenger from the front: still-Queued passengers
+        /// step toward their shifted slot one adjacent anchor at a time instead of jumping straight there,
+        /// and only newly-visible slots spawn a new controller. Passengers already boarding (removed from
+        /// _passengerControllersById) are untouched.
         /// </summary>
         private void CompactQueueVisuals()
         {
@@ -398,19 +508,18 @@ namespace SCJam.LevelSystem
             for (int i = 0; i < visibleCount; i++)
             {
                 Passenger passenger = _passengerQueue.Passengers[i];
-                Transform queueTransform = _passengerQueueView.GetQueueTransform(i);
 
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
                 {
-                    controller.MoveToQueueSlot(queueTransform.position, queueTransform.rotation);
+                    controller.MoveToQueueSlot(i);
                     continue;
                 }
 
-                SpawnPassengerController(passenger, queueTransform);
+                SpawnPassengerController(passenger, i);
             }
         }
 
-        private void SpawnPassengerController(Passenger passenger, Transform queueTransform)
+        private void SpawnPassengerController(Passenger passenger, int slotIndex)
         {
             if (_passengerPrefabLookup == null || !_passengerPrefabLookup.TryGetPrefab(passenger.Color, out PassengerController prefab))
             {
@@ -420,8 +529,10 @@ namespace SCJam.LevelSystem
                 return;
             }
 
+            Transform queueTransform = _passengerQueueView.GetQueueTransform(slotIndex);
             PassengerController controller = Instantiate(prefab, queueTransform.position, queueTransform.rotation, _passengerSpawnRoot);
-            controller.Initialize(passenger);
+            controller.Initialize(passenger, _passengerQueueView);
+            controller.SnapToQueueSlot(slotIndex);
 
             _passengerControllersById[passenger.Id] = controller;
             _spawnedGameObjects.Add(controller.gameObject);

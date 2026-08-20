@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using SCJam.AudioSystem;
@@ -45,6 +47,7 @@ namespace SCJam.VehicleSystem
         private Collider _collider;
         private bool _isMoving;
         private Vector3 _originalScale;
+        private CancellationToken _destroyCancellationToken;
 
 
         // ===== Public Properties ===== //
@@ -58,6 +61,7 @@ namespace SCJam.VehicleSystem
 
         private void Awake()
         {
+            _destroyCancellationToken = this.GetCancellationTokenOnDestroy();
             SetDustPlaying(false);
         }
 
@@ -146,9 +150,9 @@ namespace SCJam.VehicleSystem
                 return;
 
             if (_movementResolver.IsPathClear(_vehicle))
-                MoveToWaitingSlotRoutine().Forget();
+                MoveToWaitingSlotRoutine().Forget(HandleRoutineException);
             else
-                BumpAndReverseRoutine().Forget();
+                BumpAndReverseRoutine().Forget(HandleRoutineException);
         }
 
         public bool CanDepart()
@@ -161,7 +165,7 @@ namespace SCJam.VehicleSystem
             if (!CanDepart())
                 return;
 
-            DepartRoutine().Forget();
+            DepartRoutine().Forget(HandleRoutineException);
         }
 
         private async UniTask MoveToWaitingSlotRoutine()
@@ -243,12 +247,12 @@ namespace SCJam.VehicleSystem
                 travelledDistance = Mathf.Min(travelledDistance + step, maxDistance);
                 transform.position = startPosition + direction * travelledDistance;
 
-                await UniTask.Yield();
+                await UniTask.Yield(_destroyCancellationToken);
 
                 if (travelledDistance < _bumpAdvanceDistance)
                     continue;
 
-                VehicleController blocker = FindFirstBlockingVehicle();
+                VehicleController blocker = FindFirstBlockingVehicle(direction);
                 if (blocker != null)
                 {
                     blocker.PlayBumpedFeedback();
@@ -262,15 +266,17 @@ namespace SCJam.VehicleSystem
         /// and excluding self, so a bump is only ever triggered by an actual collider overlap rather than
         /// grid-cell math. Works against the existing non-trigger colliders directly; no Rigidbody or
         /// isTrigger change is required on the prefabs for this to function.
-        /// Returns the closest overlapping vehicle, i.e. the first one actually touched.
+        /// Overlaps are ranked by how far they sit ahead along the movement direction (not raw distance),
+        /// and anything not ahead of the vehicle is ignored, so a vehicle merely sitting alongside is never
+        /// mistaken for the one actually blocking the path.
         /// </summary>
-        private VehicleController FindFirstBlockingVehicle()
+        private VehicleController FindFirstBlockingVehicle(Vector3 direction)
         {
             Bounds bounds = _collider.bounds;
             Collider[] overlaps = Physics.OverlapBox(bounds.center, bounds.extents, transform.rotation, _vehicleCollisionMask, QueryTriggerInteraction.Collide);
 
             VehicleController closestBlocker = null;
-            float closestDistanceSqr = float.MaxValue;
+            float closestForwardDistance = float.MaxValue;
 
             foreach (Collider overlap in overlaps)
             {
@@ -280,11 +286,14 @@ namespace SCJam.VehicleSystem
                 if (!overlap.TryGetComponent(out VehicleController otherController) || otherController == this)
                     continue;
 
-                float distanceSqr = (overlap.bounds.center - bounds.center).sqrMagnitude;
-                if (distanceSqr >= closestDistanceSqr)
+                float forwardDistance = Vector3.Dot(overlap.bounds.center - bounds.center, direction);
+                if (forwardDistance <= 0f)
                     continue;
 
-                closestDistanceSqr = distanceSqr;
+                if (forwardDistance >= closestForwardDistance)
+                    continue;
+
+                closestForwardDistance = forwardDistance;
                 closestBlocker = otherController;
             }
 
@@ -309,7 +318,8 @@ namespace SCJam.VehicleSystem
             // Reverse straight back without rotating; MoveAndFaceRoutine would turn the vehicle
             // to face the destination, which means spinning 180 degrees while backing up.
             Vector3 reversePosition = transform.position - transform.forward * _departReverseDistance;
-            await transform.DOMove(reversePosition, ComputeDuration(reversePosition)).SetEase(Ease.Linear).ToUniTask();
+            await transform.DOMove(reversePosition, ComputeDuration(reversePosition)).SetEase(Ease.Linear)
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
 
             // The vehicle currently faces slotAnchor.rotation, which is an arbitrary designer-placed
             // angle rather than a grid-aligned one. Turning by a relative +90 off that angle would
@@ -318,7 +328,8 @@ namespace SCJam.VehicleSystem
             await RotateTowardsRoutine(turnRotation);
 
             Vector3 departPosition = transform.position + transform.forward * (_departDistance * _boardView.CellSize);
-            await transform.DOMove(departPosition, ComputeDuration(departPosition)).SetEase(Ease.Linear).ToUniTask();
+            await transform.DOMove(departPosition, ComputeDuration(departPosition)).SetEase(Ease.Linear)
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
 
             // Waiting-slot release timing follows the same footprint-clear rule as the board: released
             // only once the vehicle has fully left the slot, not when departure starts.
@@ -438,7 +449,8 @@ namespace SCJam.VehicleSystem
             Quaternion targetRotation = faceRotation ?? ComputeFacingRotation(targetPosition);
             await UniTask.WhenAll(
                 RotateTowardsRoutine(targetRotation),
-                transform.DOMove(targetPosition, ComputeDuration(targetPosition)).SetEase(Ease.Linear).ToUniTask());
+                transform.DOMove(targetPosition, ComputeDuration(targetPosition)).SetEase(Ease.Linear)
+                    .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken));
         }
 
         private Quaternion ComputeFacingRotation(Vector3 targetPosition)
@@ -467,7 +479,8 @@ namespace SCJam.VehicleSystem
 
             float angle = Quaternion.Angle(transform.rotation, targetRotation);
             float duration = angle / _rotateSpeed;
-            await transform.DORotateQuaternion(targetRotation, duration).SetEase(Ease.Linear).ToUniTask();
+            await transform.DORotateQuaternion(targetRotation, duration).SetEase(Ease.Linear)
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
         }
 
         private Vector3 GetWorldDirectionVector(GridDirection direction)
@@ -482,6 +495,16 @@ namespace SCJam.VehicleSystem
             };
 
             return _boardView.GridOrigin.rotation * localDirection;
+        }
+
+        /// <summary>
+        /// Cancellation from GetCancellationTokenOnDestroy is expected whenever a level transition destroys
+        /// this vehicle mid-routine, so it is swallowed here instead of surfacing as an unobserved exception.
+        /// </summary>
+        private static void HandleRoutineException(Exception exception)
+        {
+            if (exception is not OperationCanceledException)
+                Debug.LogException(exception);
         }
     }
 }

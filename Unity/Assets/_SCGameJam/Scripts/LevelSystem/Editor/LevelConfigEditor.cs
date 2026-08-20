@@ -89,8 +89,8 @@ namespace SCJam.LevelSystem.Editor
         /// vehicles must be waiting at once to consume the front of the queue at waiting slot count, so the
         /// waiting area can never end up deadlocked — full of not-yet-full vehicles with no free slot for the
         /// vehicle whose color is next in line. Every passenger emitted for a vehicle still counts toward
-        /// that vehicle's capacity only, so the boarding rule (see BoardingResolver.TryBoard, which removes a
-        /// contiguous same-color run from the front of the queue up to a waiting vehicle's remaining
+        /// that vehicle's capacity only, so the boarding rule (see BoardingResolver.TryBoard, which boards one
+        /// same-color passenger at a time from the front of the queue up to a waiting vehicle's remaining
         /// capacity) can always fully consume that vehicle's passengers once it is waiting.
         /// </summary>
         private void GenerateColorSequence()
