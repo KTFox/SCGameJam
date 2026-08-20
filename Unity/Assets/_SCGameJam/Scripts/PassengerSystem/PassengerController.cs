@@ -28,6 +28,10 @@ namespace SCJam.PassengerSystem
         private Passenger _passenger;
         private bool _isBoarding;
         private bool _isMoving;
+        private bool _isSteppingThroughQueue;
+        private int _currentQueueSlotIndex;
+        private int _targetQueueSlotIndex;
+        private PassengerQueueView _queueView;
 
 
         // ===== Public Properties ===== //
@@ -35,12 +39,32 @@ namespace SCJam.PassengerSystem
         public Passenger Passenger => _passenger;
         public bool IsMoving => _isMoving;
 
+        /// <summary>
+        /// True once this passenger has physically arrived at queue slot 0 and is not mid-step toward
+        /// another slot. Boarding/matching must wait for this before treating it as the front of the queue.
+        /// </summary>
+        public bool IsSettledAtQueueFront => !_isSteppingThroughQueue && _currentQueueSlotIndex == 0;
+
 
         // ===== Methods ===== //
 
-        public void Initialize(Passenger passenger)
+        public void Initialize(Passenger passenger, PassengerQueueView queueView)
         {
             _passenger = passenger;
+            _queueView = queueView;
+        }
+
+        /// <summary>
+        /// Places this passenger at a queue slot instantly (no tween), used when it first spawns into the
+        /// queue. Establishes the current/target slot index that MoveToQueueSlot steps from afterward.
+        /// </summary>
+        public void SnapToQueueSlot(int slotIndex)
+        {
+            _currentQueueSlotIndex = slotIndex;
+            _targetQueueSlotIndex = slotIndex;
+
+            Transform anchor = _queueView.GetQueueTransform(slotIndex);
+            transform.SetPositionAndRotation(anchor.position, anchor.rotation);
         }
 
         /// <summary>
@@ -111,17 +135,40 @@ namespace SCJam.PassengerSystem
         }
 
         /// <summary>
-        /// Moves an already-spawned, still-Queued passenger to its new queue anchor after the front of the
-        /// queue compacts. No-ops for passengers mid-boarding so a compaction never interrupts their walk.
+        /// Requests that an already-spawned, still-Queued passenger walk toward a new queue slot after the
+        /// front of the queue compacts, advancing one adjacent slot at a time instead of jumping straight to
+        /// the destination. No-ops for passengers mid-boarding so a compaction never interrupts their walk.
+        /// If a step is already in progress, only the target is updated — the in-flight step finishes and
+        /// the routine then continues on from there toward the latest target.
         /// </summary>
-        public void MoveToQueueSlot(Vector3 targetPosition, Quaternion targetRotation)
+        public void MoveToQueueSlot(int targetSlotIndex)
         {
             if (_isBoarding || _passenger.State != PassengerState.Queued)
                 return;
 
-            transform.DOKill();
-            transform.rotation = targetRotation;
-            transform.DOMove(targetPosition, ComputeDuration(targetPosition)).SetEase(Ease.Linear);
+            _targetQueueSlotIndex = targetSlotIndex;
+
+            if (_isSteppingThroughQueue)
+                return;
+
+            StepThroughQueueRoutine().Forget();
+        }
+
+        private async UniTaskVoid StepThroughQueueRoutine()
+        {
+            _isSteppingThroughQueue = true;
+            SetIsMoving(true);
+
+            while (_currentQueueSlotIndex != _targetQueueSlotIndex)
+            {
+                _currentQueueSlotIndex += _currentQueueSlotIndex < _targetQueueSlotIndex ? 1 : -1;
+                Transform anchor = _queueView.GetQueueTransform(_currentQueueSlotIndex);
+                await MoveStepRoutine(anchor.position);
+                transform.rotation = anchor.rotation;
+            }
+
+            SetIsMoving(false);
+            _isSteppingThroughQueue = false;
         }
 
         private void SetIsMoving(bool isMoving)

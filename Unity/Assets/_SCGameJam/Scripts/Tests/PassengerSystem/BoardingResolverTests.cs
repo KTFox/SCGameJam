@@ -24,7 +24,7 @@ namespace SCJam.Tests.PassengerSystem
         private static Passenger CreatePassenger(int id, PuzzleColor color) => new(id, color, id);
 
         [Test]
-        public void TryBoard_BoardsWholeFrontGroup_WhenCapacityCoversIt()
+        public void TryBoard_BoardsOnlyOnePassenger_PerCall_WhenFrontGroupIsLarger()
         {
             PassengerQueue queue = new(new[]
             {
@@ -37,29 +37,48 @@ namespace SCJam.Tests.PassengerSystem
 
             IReadOnlyList<Passenger> boarded = resolver.TryBoard(vehicle);
 
-            Assert.AreEqual(2, boarded.Count);
-            Assert.AreEqual(2, vehicle.OccupiedSeatCount);
+            Assert.AreEqual(1, boarded.Count);
+            Assert.AreEqual(1, vehicle.OccupiedSeatCount);
             Assert.AreEqual(VehicleState.Boarding, vehicle.State);
-            Assert.AreEqual(1, queue.Passengers.Count);
+            Assert.AreEqual(2, queue.Passengers.Count);
             Assert.AreEqual(PassengerState.MovingToVehicle, boarded[0].State);
         }
 
         [Test]
-        public void TryBoard_BoardsOnlyUpToRemainingCapacity_WhenFrontGroupIsLarger()
+        public void TryBoard_DrainsFrontGroupAcrossMultipleCalls_WhileStillBoarding()
         {
             PassengerQueue queue = new(new[]
             {
                 CreatePassenger(1, PuzzleColor.Orange),
                 CreatePassenger(2, PuzzleColor.Orange),
-                CreatePassenger(3, PuzzleColor.Orange)
+                CreatePassenger(3, PuzzleColor.Pink)
             });
-            Vehicle vehicle = CreateWaitingVehicle(PuzzleColor.Orange, capacity: 4, occupiedSeatCount: 3);
+            Vehicle vehicle = CreateWaitingVehicle(PuzzleColor.Orange, capacity: 4);
+            BoardingResolver resolver = new(queue);
+
+            resolver.TryBoard(vehicle);
+            IReadOnlyList<Passenger> secondBoarded = resolver.TryBoard(vehicle);
+
+            Assert.AreEqual(VehicleState.Boarding, vehicle.State);
+            Assert.AreEqual(1, secondBoarded.Count);
+            Assert.AreEqual(2, vehicle.OccupiedSeatCount);
+            Assert.AreEqual(1, queue.Passengers.Count);
+        }
+
+        [Test]
+        public void TryBoard_ReturnsEmpty_WhenCapacityAlreadyExhausted()
+        {
+            PassengerQueue queue = new(new[]
+            {
+                CreatePassenger(1, PuzzleColor.Orange),
+                CreatePassenger(2, PuzzleColor.Orange)
+            });
+            Vehicle vehicle = CreateWaitingVehicle(PuzzleColor.Orange, capacity: 4, occupiedSeatCount: 4);
             BoardingResolver resolver = new(queue);
 
             IReadOnlyList<Passenger> boarded = resolver.TryBoard(vehicle);
 
-            Assert.AreEqual(1, boarded.Count);
-            Assert.AreEqual(4, vehicle.OccupiedSeatCount);
+            Assert.AreEqual(0, boarded.Count);
             Assert.AreEqual(2, queue.Passengers.Count);
         }
 
@@ -78,7 +97,7 @@ namespace SCJam.Tests.PassengerSystem
         }
 
         [Test]
-        public void TryBoard_ReturnsEmpty_WhenVehicleIsNotWaiting()
+        public void TryBoard_ReturnsEmpty_WhenVehicleIsNeitherWaitingNorBoarding()
         {
             PassengerQueue queue = new(new[] { CreatePassenger(1, PuzzleColor.Orange) });
             Vehicle vehicle = new(1, PuzzleColor.Orange, 4, new[] { new Vector2Int(0, 0) }, GridDirection.Right);
@@ -100,6 +119,20 @@ namespace SCJam.Tests.PassengerSystem
             IReadOnlyList<Passenger> boarded = resolver.TryBoard(vehicle);
 
             Assert.AreEqual(0, boarded.Count);
+        }
+
+        [Test]
+        public void TryBoard_ReturnsEmpty_WhenVehicleIsBoardingAndAlreadyFull()
+        {
+            PassengerQueue queue = new(new[] { CreatePassenger(1, PuzzleColor.Orange) });
+            Vehicle vehicle = CreateWaitingVehicle(PuzzleColor.Orange, capacity: 2, occupiedSeatCount: 2);
+            vehicle.ChangeState(VehicleState.Boarding);
+            BoardingResolver resolver = new(queue);
+
+            IReadOnlyList<Passenger> boarded = resolver.TryBoard(vehicle);
+
+            Assert.AreEqual(0, boarded.Count);
+            Assert.AreEqual(1, queue.Passengers.Count);
         }
 
         [Test]

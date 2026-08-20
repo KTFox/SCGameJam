@@ -30,13 +30,17 @@ namespace SCJam.PassengerSystem
         }
 
         /// <summary>
-        /// Matches the accessible front group of the queue against a waiting vehicle of the same color,
-        /// boarding as many as its remaining capacity allows and moving the vehicle into the Boarding
-        /// state. Call CompleteBoarding once the boarding animation finishes.
+        /// Matches the accessible front group of the queue against a waiting or already-boarding vehicle of
+        /// the same color, boarding a single passenger at a time (one board call per matching passenger).
+        /// A vehicle already in the Boarding state stays eligible while it has free seats, so passengers can
+        /// keep streaming toward it without waiting for an earlier passenger's boarding animation to finish.
+        /// Call CompleteBoarding once every pending boarding animation for the vehicle has finished.
         /// </summary>
         public IReadOnlyList<Passenger> TryBoard(Vehicle vehicle)
         {
-            if (vehicle.State != VehicleState.Waiting)
+            bool isBoardable = vehicle.State == VehicleState.Waiting
+                || (vehicle.State == VehicleState.Boarding && vehicle.OccupiedSeatCount < vehicle.Capacity);
+            if (!isBoardable)
                 return Array.Empty<Passenger>();
 
             IReadOnlyList<Passenger> frontGroup = _passengerQueue.GetAccessibleFrontGroup();
@@ -44,7 +48,7 @@ namespace SCJam.PassengerSystem
                 return Array.Empty<Passenger>();
 
             int remainingCapacity = vehicle.Capacity - vehicle.OccupiedSeatCount;
-            int boardingCount = Math.Min(frontGroup.Count, remainingCapacity);
+            int boardingCount = Math.Min(1, remainingCapacity);
             if (boardingCount <= 0)
                 return Array.Empty<Passenger>();
 

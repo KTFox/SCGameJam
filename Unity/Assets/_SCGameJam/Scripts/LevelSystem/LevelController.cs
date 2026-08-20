@@ -195,6 +195,12 @@ namespace SCJam.LevelSystem
             if (frontGroup.Count == 0)
                 return;
 
+            // The front passenger must have physically finished walking into queue slot 0 before it can be
+            // matched — boarding may never pull a passenger that's still mid-step between queue slots.
+            if (_passengerControllersById.TryGetValue(frontGroup[0].Id, out PassengerController frontController)
+                && !frontController.IsSettledAtQueueFront)
+                return;
+
             List<WaitingVehicleEntry> entries = BuildWaitingVehicleEntries();
             if (entries.Count == 0)
                 return;
@@ -210,7 +216,12 @@ namespace SCJam.LevelSystem
             VehicleController vehicleController = _vehicleControllersById[selectedVehicle.Id];
             Vector3 queueFrontPosition = _passengerQueueView.GetQueueTransform(0).position;
             int firstSeat = selectedVehicle.OccupiedSeatCount - boardedPassengers.Count;
-            List<Passenger> pending = new(boardedPassengers.Count);
+
+            if (!_pendingBoardingByVehicleId.TryGetValue(selectedVehicle.Id, out List<Passenger> pending))
+            {
+                pending = new List<Passenger>(boardedPassengers.Count);
+                _pendingBoardingByVehicleId[selectedVehicle.Id] = pending;
+            }
 
             for (int i = 0; i < boardedPassengers.Count; i++)
             {
@@ -229,7 +240,6 @@ namespace SCJam.LevelSystem
                 }
             }
 
-            _pendingBoardingByVehicleId[selectedVehicle.Id] = pending;
             CompactQueueVisuals();
         }
 
@@ -438,22 +448,22 @@ namespace SCJam.LevelSystem
             for (int i = 0; i < visibleCount; i++)
             {
                 Passenger passenger = _passengerQueue.Passengers[i];
-                Transform queueTransform = _passengerQueueView.GetQueueTransform(i);
 
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
                 {
-                    controller.transform.SetPositionAndRotation(queueTransform.position, queueTransform.rotation);
+                    controller.SnapToQueueSlot(i);
                     continue;
                 }
 
-                SpawnPassengerController(passenger, queueTransform);
+                SpawnPassengerController(passenger, i);
             }
         }
 
         /// <summary>
-        /// Re-lays the queue out after boarding removes passengers from the front: still-Queued passengers
-        /// tween to their shifted anchor instead of snapping, and only newly-visible slots spawn a new
-        /// controller. Passengers already boarding (removed from _passengerControllersById) are untouched.
+        /// Re-lays the queue out after boarding removes a passenger from the front: still-Queued passengers
+        /// step toward their shifted slot one adjacent anchor at a time instead of jumping straight there,
+        /// and only newly-visible slots spawn a new controller. Passengers already boarding (removed from
+        /// _passengerControllersById) are untouched.
         /// </summary>
         private void CompactQueueVisuals()
         {
@@ -462,19 +472,18 @@ namespace SCJam.LevelSystem
             for (int i = 0; i < visibleCount; i++)
             {
                 Passenger passenger = _passengerQueue.Passengers[i];
-                Transform queueTransform = _passengerQueueView.GetQueueTransform(i);
 
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
                 {
-                    controller.MoveToQueueSlot(queueTransform.position, queueTransform.rotation);
+                    controller.MoveToQueueSlot(i);
                     continue;
                 }
 
-                SpawnPassengerController(passenger, queueTransform);
+                SpawnPassengerController(passenger, i);
             }
         }
 
-        private void SpawnPassengerController(Passenger passenger, Transform queueTransform)
+        private void SpawnPassengerController(Passenger passenger, int slotIndex)
         {
             if (_passengerPrefabLookup == null || !_passengerPrefabLookup.TryGetPrefab(passenger.Color, out PassengerController prefab))
             {
@@ -484,8 +493,10 @@ namespace SCJam.LevelSystem
                 return;
             }
 
+            Transform queueTransform = _passengerQueueView.GetQueueTransform(slotIndex);
             PassengerController controller = Instantiate(prefab, queueTransform.position, queueTransform.rotation, _passengerSpawnRoot);
-            controller.Initialize(passenger);
+            controller.Initialize(passenger, _passengerQueueView);
+            controller.SnapToQueueSlot(slotIndex);
 
             _passengerControllersById[passenger.Id] = controller;
             _spawnedGameObjects.Add(controller.gameObject);
