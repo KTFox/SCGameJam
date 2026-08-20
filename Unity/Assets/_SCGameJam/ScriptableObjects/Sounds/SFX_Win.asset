@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e47cc2f7fc5343eaa1adafea5c89088, type: 3}
-  m_Name: SFX_Lose
+  m_Name: SFX_Win
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.AudioSystem.SoundSO
   audioType: 0
-  clip: {fileID: 8300000, guid: 525a2f9f8fa364855bb3aa2c8b10b22a, type: 3}
+  clip: {fileID: 8300000, guid: 1ff60508e079541adb25c2b80e886761, type: 3}
   loop: 0
   volume: 1
   minPitch: 1
