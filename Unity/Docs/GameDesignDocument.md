@@ -21,6 +21,8 @@ The game focuses on simple interactions, spatial reasoning, and solving traffic-
 * When a bus reaches the pickup area, passengers with the matching color board it.
 * The player must determine the correct order to release buses.
 * The level is completed when all required passengers are transported and the parking area is cleared.
+* A bus fills up and leaves the waiting area automatically once full; the player never manually sends a full bus away.
+* The level is failed if the puzzle becomes unsolvable: the waiting area is completely full and none of the waiting buses match the color of passengers currently at the front of the queue.
 
 ### Core Loop
 
@@ -30,6 +32,12 @@ The game focuses on simple interactions, spatial reasoning, and solving traffic-
 4. Match buses with passengers.
 5. Clear all passengers/buses.
 6. Complete the level and continue to the next puzzle.
+
+### Win / Lose Conditions
+
+**Win:** The level is won once the passenger queue is empty, no passenger is mid-boarding, and no bus remains `Parked` or `MovingToExit` on the board. A bus that already left the board is not required to have boarded anyone or departed the waiting area for the level to count as cleared — only buses still on the board (unmoved or mid-exit) block the win.
+
+**Lose (stuck/deadlock):** The level is failed the moment the puzzle becomes unsolvable: the front group of the passenger queue has no color match among buses currently in the waiting area, and the waiting area has no free slot left for another bus to arrive and relieve it. This is checked continuously and triggers immediately, with no grace period. Once a level is won or lost, gameplay freezes — no further bus/passenger processing occurs until the next level loads.
 
 ### Technical Direction
 
@@ -62,6 +70,8 @@ Each vehicle contains the following gameplay properties:
     + `Completed`: The vehicle is no longer active in the level.
     + ...
 
+A vehicle boards as many passengers as fit from the current front group at once (up to its remaining capacity), not one at a time. If it fills completely, it becomes `Full` and departs automatically — the player never manually sends a full vehicle away. If it boards fewer passengers than its remaining capacity (the front group was smaller), it returns to `Waiting` and remains eligible to board a later front group of the same color.
+
 ### Passenger
 A passenger is a color-coded unit waiting to board a matching vehicle.
 Each passenger contains the following properties:
@@ -77,6 +87,9 @@ Each passenger contains the following properties:
 The passenger queue determines the order in which passengers may be processed.
 Only passengers at the accessible front section of the queue may board vehicles.
 Under a grouped-front rule, all consecutive passengers of the same color at the front may be processed together.
+The whole front group must match a waiting vehicle's color to board; the group boards that vehicle together (up to its remaining capacity) in a single match, not passenger-by-passenger matching.
+
+If a passenger's color has no prefab configured for the level, the passenger is skipped visually (not spawned) rather than blocking or crashing the level; the issue is logged for the level designer to fix.
 
 ### Waiting Area
 The waiting area contains a fixed number of vehicle slots.
@@ -133,5 +146,36 @@ After a vehicle exits the parking board (footprint cleared) and its waiting slot
     2. Earliest-arrived vehicle
     3. Lowest waiting-slot index
 - Prioritizing the most-filled vehicle helps free slots sooner and produces deterministic behavior.
+- Only vehicles currently `Waiting` are eligible for matching; a vehicle that is `Boarding` or already `Full` is skipped even if its color matches, since a full vehicle is already departing.
+- "Earliest-arrived" is measured from when a vehicle actually settles into its waiting slot, not from when it started moving toward it.
+
+---
+
+## Level Configuration
+
+Each level is authored as a single data asset (no hard-coded level logic), holding:
+- Board size (grid width/height).
+- Waiting slot count (how many waiting slots are active for this level, up to 7).
+- Background music, played automatically once the level starts.
+- Bus placements: starting cell, color/capacity/footprint, and movement direction for every bus on the board.
+- Passenger color sequence: the ordered list of passenger colors, defining the queue content and order for the level.
+- Passenger prefab mappings: which visual prefab represents each passenger color in this level.
+
+While authoring a level, missing or duplicate passenger prefab mappings, or colors used in the queue without a matching prefab, are flagged automatically so the issue is caught before playtesting.
+
+---
+
+## Audio Feedback
+
+- Background music: plays once when a level starts, per-level configurable.
+- Bump sound: plays on a bus that gets blocked and bounces back (see Blocked-Path Bump & Reverse).
+- Boarding sound: plays each time an individual passenger finishes boarding a bus.
+- Full sound: plays once a bus finishes boarding and becomes full, alongside a full-capacity visual effect.
+
+---
+
+## Scene Flow
+
+Entering gameplay (and other scene transitions) goes through a loading screen: progress is shown on a progress bar, and the loading screen is guaranteed to stay visible for a minimum duration even on fast loads, so it never flashes briefly on-screen.
 
 ---

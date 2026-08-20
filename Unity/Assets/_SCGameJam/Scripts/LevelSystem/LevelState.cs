@@ -4,6 +4,7 @@ namespace SCJam.LevelSystem
     {
         Loading,
         Playing,
-        Won
+        Won,
+        Lost
     }
 }
