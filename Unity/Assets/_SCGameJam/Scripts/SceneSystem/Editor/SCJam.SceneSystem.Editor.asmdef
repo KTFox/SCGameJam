@@ -1,13 +1,12 @@
 {
-    "name": "SCJam.Runtime",
+    "name": "SCJam.SceneSystem.Editor",
     "rootNamespace": "",
     "references": [
-        "Unity.InputSystem",
-        "Unity.TextMeshPro",
-        "UniTask",
-        "UniTask.DOTween"
+        "SCJam.Runtime"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

@@ -6,7 +6,13 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/_SCGameJam/Scenes/MainScene.unity
+    path: Assets/_SCGameJam/Scenes/Persistent.unity
+    guid: 33630ba2798fb458fa85f3ebb35ace94
+  - enabled: 1
+    path: Assets/_SCGameJam/Scenes/Loading.unity
+    guid: 2b3a025fa786a467b8e4016527e1345a
+  - enabled: 1
+    path: Assets/_SCGameJam/Scenes/Gameplay.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 96e17790804494f40a901a337eeaa97d, type: 2}
