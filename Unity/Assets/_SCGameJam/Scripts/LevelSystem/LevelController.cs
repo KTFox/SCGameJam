@@ -24,6 +24,8 @@ namespace SCJam.LevelSystem
         [SerializeField] private PassengerQueueView _passengerQueueView;
         [SerializeField] private Transform _vehicleSpawnRoot;
         [SerializeField] private Transform _passengerSpawnRoot;
+        [SerializeField] private SoundSO _winSound;
+        [SerializeField] private SoundSO _loseSound;
 
 
         // ===== Private Fields ===== //
@@ -111,7 +113,7 @@ namespace SCJam.LevelSystem
             RefreshQueueVisuals();
 
             _levelState = LevelState.Playing;
-            AudioManager.Instance?.PlaySound(levelConfig.BackgroundMusic);
+            AudioManager.Instance?.PlayMusic(levelConfig.BackgroundMusic);
         }
 
         private void BuildBoard(LevelConfig levelConfig)
@@ -327,6 +329,8 @@ namespace SCJam.LevelSystem
             _levelState = LevelState.Won;
             Debug.Log("Level completed");
 
+            AudioManager.Instance?.StopMusic();
+            AudioManager.Instance?.PlaySound(_winSound);
             OnLevelCompleted?.Invoke();
             ShowNextLevelPopup();
         }
@@ -360,6 +364,8 @@ namespace SCJam.LevelSystem
             _levelState = LevelState.Lost;
             Debug.Log("Level failed");
 
+            AudioManager.Instance?.StopMusic();
+            AudioManager.Instance?.PlaySound(_loseSound);
             OnLevelFailed?.Invoke();
             ShowLosePopup();
         }

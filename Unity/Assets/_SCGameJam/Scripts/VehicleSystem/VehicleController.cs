@@ -29,6 +29,7 @@ namespace SCJam.VehicleSystem
         [SerializeField] private LayerMask _vehicleCollisionMask;
         [SerializeField] private float _bumpAdvanceDistance;
         [SerializeField] private SoundSO _bumpSound;
+        [SerializeField] private SoundSO _selectSound;
         [SerializeField] private float _bumpShakeStrength;
         [SerializeField] private float _bumpShakeDuration;
         [SerializeField] private int _bumpShakeVibrato;
@@ -148,6 +149,8 @@ namespace SCJam.VehicleSystem
         {
             if (!CanMove())
                 return;
+
+            AudioManager.Instance.PlaySound(_selectSound);
 
             if (_movementResolver.IsPathClear(_vehicle))
                 MoveToWaitingSlotRoutine().Forget(HandleRoutineException);

@@ -29,6 +29,8 @@ namespace SCJam.AudioSystem
         private readonly Dictionary<SoundSO, float> _lastPlayTimeBySound = new();
 
         private float _maxSoundDistanceSqr;
+        private AudioSource _musicSource;
+        private SoundSO _currentMusic;
 
 
         // ===== MONOBEHAVIOUR METHODS ===== //
@@ -37,6 +39,7 @@ namespace SCJam.AudioSystem
         {
             base.Awake();
             InitializePool();
+            _musicSource = CreateAudioSource();
         }
 
         private void Start()
@@ -97,6 +100,31 @@ namespace SCJam.AudioSystem
             {
                 StartCoroutine(Co_ReturnToPool(audioSource, soundData.Clip.length));
             }
+        }
+
+        public void PlayMusic(SoundSO musicData)
+        {
+            if (musicData == null)
+                return;
+
+            if (_currentMusic == musicData && _musicSource.isPlaying)
+                return;
+
+            _musicSource.Stop();
+            _musicSource.clip = musicData.Clip;
+            _musicSource.pitch = musicData.MaxPitch;
+            _musicSource.volume = musicData.Volume * masterVolume;
+            _musicSource.loop = musicData.Loop;
+            _musicSource.outputAudioMixerGroup = musicMixerGroup;
+            _musicSource.Play();
+
+            _currentMusic = musicData;
+        }
+
+        public void StopMusic()
+        {
+            _musicSource.Stop();
+            _currentMusic = null;
         }
 
         private float GetVolumeMultiplierByDistance(Vector3 soundPosition)

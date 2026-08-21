@@ -286,7 +286,7 @@ Transform:
   m_GameObject: {fileID: 167442829}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -8.5}
+  m_LocalPosition: {x: 0, y: 0, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1544,6 +1544,8 @@ MonoBehaviour:
   _passengerQueueView: {fileID: 158309919}
   _vehicleSpawnRoot: {fileID: 1498448901}
   _passengerSpawnRoot: {fileID: 597718613}
+  _winSound: {fileID: 11400000, guid: b74fd7f419ef44b0f8b4b87b2c635e2f, type: 2}
+  _loseSound: {fileID: 11400000, guid: aa0588bde0bad4551afbdffb2f16d8c2, type: 2}
 --- !u!1 &1826823342
 GameObject:
   m_ObjectHideFlags: 0
