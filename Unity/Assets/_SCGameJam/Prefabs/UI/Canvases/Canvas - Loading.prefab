@@ -502,8 +502,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -141, y: 0}
-  m_SizeDelta: {x: 711.7412, y: 0}
+  m_AnchoredPosition: {x: -121, y: 31.162}
+  m_SizeDelta: {x: 610.3691, y: 62.3247}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8274605867688915364
 CanvasRenderer:
@@ -556,7 +556,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.AspectRatioFitter
   m_AspectMode: 0
-  m_AspectRatio: 0.9331986
+  m_AspectRatio: 0.8527206
 --- !u!1 &6490045701406776892
 GameObject:
   m_ObjectHideFlags: 0
@@ -746,8 +746,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.11798096, y: 664.6245}
-  m_SizeDelta: {x: -230.49847, y: -1495.2493}
+  m_AnchoredPosition: {x: 0, y: 697}
+  m_SizeDelta: {x: -164.1514, y: -1462.0757}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &734720985705608781
 CanvasRenderer:
