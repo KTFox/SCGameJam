@@ -10,6 +10,7 @@ namespace SCJam.UISystem
 
         [SerializeField] private Button _retryButton;
         [SerializeField] private Button _quitButton;
+        [SerializeField] private Button _closeButton;
 
 
         // ===== Events ===== //
@@ -24,12 +25,14 @@ namespace SCJam.UISystem
         {
             _retryButton.onClick.AddListener(OnRetryClicked);
             _quitButton.onClick.AddListener(OnQuitClicked);
+            _closeButton.onClick.AddListener(OnCloseClicked);
         }
 
         private void OnDisable()
         {
             _retryButton.onClick.RemoveListener(OnRetryClicked);
             _quitButton.onClick.RemoveListener(OnQuitClicked);
+            _closeButton.onClick.RemoveListener(OnCloseClicked);
         }
 
         private void OnRetryClicked()
@@ -41,6 +44,11 @@ namespace SCJam.UISystem
         private void OnQuitClicked()
         {
             QuitRequested?.Invoke();
+            PopupManager.Instance.Close();
+        }
+
+        private void OnCloseClicked()
+        {
             PopupManager.Instance.Close();
         }
     }

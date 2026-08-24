@@ -47,6 +47,7 @@ namespace SCJam.LevelSystem
         private PassengerPrefabLookup _passengerPrefabLookup;
         private PopupNextLevel _openNextLevelPopup;
         private PopupLose _openLosePopup;
+        private PopupSetting _openSettingPopup;
 
 
         // ===== Public Properties ===== //
@@ -79,9 +80,16 @@ namespace SCJam.LevelSystem
             EvaluateLoseCondition();
         }
 
+        private void OnEnable()
+        {
+            PopupManager.PopupOpened += OnPopupOpened;
+        }
+
         private void OnDisable()
         {
+            PopupManager.PopupOpened -= OnPopupOpened;
             UnsubscribeFromResultPopup();
+            UnsubscribeFromSettingPopup();
         }
 
 
@@ -444,6 +452,29 @@ namespace SCJam.LevelSystem
             }
         }
 
+        private void UnsubscribeFromSettingPopup()
+        {
+            if (_openSettingPopup == null)
+                return;
+
+            _openSettingPopup.RetryRequested -= OnRetryRequested;
+            _openSettingPopup.QuitRequested -= OnQuitRequested;
+            _openSettingPopup = null;
+        }
+
+        private void OnPopupOpened(PopupId popupId)
+        {
+            if (popupId != PopupId.Setting)
+                return;
+
+            if (!PopupManager.Instance.TryGetPopup(PopupId.Setting, out PopupBase popup) || popup is not PopupSetting settingPopup)
+                return;
+
+            _openSettingPopup = settingPopup;
+            _openSettingPopup.RetryRequested += OnRetryRequested;
+            _openSettingPopup.QuitRequested += OnQuitRequested;
+        }
+
         private void OnNextLevelRequested()
         {
             UnsubscribeFromResultPopup();
@@ -465,12 +496,14 @@ namespace SCJam.LevelSystem
         private void OnRetryRequested()
         {
             UnsubscribeFromResultPopup();
+            UnsubscribeFromSettingPopup();
             LoadCurrentLevel();
         }
 
         private void OnQuitRequested()
         {
             UnsubscribeFromResultPopup();
+            UnsubscribeFromSettingPopup();
 
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
