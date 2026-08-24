@@ -26,6 +26,8 @@ namespace SCJam.LevelSystem
         [SerializeField] private Transform _passengerSpawnRoot;
         [SerializeField] private SoundSO _winSound;
         [SerializeField] private SoundSO _loseSound;
+        [SerializeField] private VehicleSelectionController _vehicleSelectionController;
+        [SerializeField] private GuideFingerController _guideFingerController;
 
 
         // ===== Private Fields ===== //
@@ -47,6 +49,8 @@ namespace SCJam.LevelSystem
         private PassengerPrefabLookup _passengerPrefabLookup;
         private PopupNextLevel _openNextLevelPopup;
         private PopupLose _openLosePopup;
+        private PopupSetting _openSettingPopup;
+        private VehicleController _hintedVehicleController;
 
 
         // ===== Public Properties ===== //
@@ -79,9 +83,22 @@ namespace SCJam.LevelSystem
             EvaluateLoseCondition();
         }
 
+        private void OnEnable()
+        {
+            PopupManager.PopupOpened += OnPopupOpened;
+
+            if (_vehicleSelectionController != null)
+                _vehicleSelectionController.VehicleSelected += OnVehicleSelected;
+        }
+
         private void OnDisable()
         {
+            PopupManager.PopupOpened -= OnPopupOpened;
             UnsubscribeFromResultPopup();
+            UnsubscribeFromSettingPopup();
+
+            if (_vehicleSelectionController != null)
+                _vehicleSelectionController.VehicleSelected -= OnVehicleSelected;
         }
 
 
@@ -114,6 +131,8 @@ namespace SCJam.LevelSystem
 
             _levelState = LevelState.Playing;
             AudioManager.Instance?.PlayMusic(levelConfig.BackgroundMusic);
+
+            UpdateGuideFinger();
         }
 
         private void BuildBoard(LevelConfig levelConfig)
@@ -187,6 +206,66 @@ namespace SCJam.LevelSystem
 
             _passengerQueue = new PassengerQueue(passengers);
             _boardingResolver = new BoardingResolver(_passengerQueue);
+        }
+
+        /// <summary>
+        /// Onboarding hint shown at the start of every level: points at the parked vehicle the player
+        /// should tap first, i.e. the one matching the front passenger group's color with a clear path to
+        /// the exit. Hidden again as soon as the player taps any vehicle.
+        /// </summary>
+        private void UpdateGuideFinger()
+        {
+            SetHintedVehicle(null);
+
+            if (_guideFingerController == null)
+                return;
+
+            VehicleController targetVehicleController = FindSolvableVehicleController();
+            if (targetVehicleController == null)
+            {
+                _guideFingerController.Hide();
+                return;
+            }
+
+            _guideFingerController.Show(targetVehicleController.transform);
+            SetHintedVehicle(targetVehicleController);
+        }
+
+        private void SetHintedVehicle(VehicleController vehicleController)
+        {
+            if (_hintedVehicleController == vehicleController)
+                return;
+
+            if (_hintedVehicleController != null)
+                _hintedVehicleController.SetHintOutlineEnabled(false);
+
+            _hintedVehicleController = vehicleController;
+
+            if (_hintedVehicleController != null)
+                _hintedVehicleController.SetHintOutlineEnabled(true);
+        }
+
+        private VehicleController FindSolvableVehicleController()
+        {
+            IReadOnlyList<Passenger> frontGroup = _passengerQueue.GetAccessibleFrontGroup();
+            if (frontGroup.Count == 0)
+                return null;
+
+            PuzzleColor frontColor = frontGroup[0].Color;
+
+            foreach (Vehicle vehicle in _vehiclesById.Values)
+            {
+                if (vehicle.State != VehicleState.Parked || vehicle.Color != frontColor)
+                    continue;
+
+                if (!_movementResolver.IsPathClear(vehicle))
+                    continue;
+
+                if (_vehicleControllersById.TryGetValue(vehicle.Id, out VehicleController controller))
+                    return controller;
+            }
+
+            return null;
         }
 
         private void TryMatchWaitingVehicleToFrontGroup()
@@ -444,6 +523,29 @@ namespace SCJam.LevelSystem
             }
         }
 
+        private void UnsubscribeFromSettingPopup()
+        {
+            if (_openSettingPopup == null)
+                return;
+
+            _openSettingPopup.RetryRequested -= OnRetryRequested;
+            _openSettingPopup.QuitRequested -= OnQuitRequested;
+            _openSettingPopup = null;
+        }
+
+        private void OnPopupOpened(PopupId popupId)
+        {
+            if (popupId != PopupId.Setting)
+                return;
+
+            if (!PopupManager.Instance.TryGetPopup(PopupId.Setting, out PopupBase popup) || popup is not PopupSetting settingPopup)
+                return;
+
+            _openSettingPopup = settingPopup;
+            _openSettingPopup.RetryRequested += OnRetryRequested;
+            _openSettingPopup.QuitRequested += OnQuitRequested;
+        }
+
         private void OnNextLevelRequested()
         {
             UnsubscribeFromResultPopup();
@@ -465,18 +567,26 @@ namespace SCJam.LevelSystem
         private void OnRetryRequested()
         {
             UnsubscribeFromResultPopup();
+            UnsubscribeFromSettingPopup();
             LoadCurrentLevel();
         }
 
         private void OnQuitRequested()
         {
             UnsubscribeFromResultPopup();
+            UnsubscribeFromSettingPopup();
 
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else
             Application.Quit();
 #endif
+        }
+
+        private void OnVehicleSelected(VehicleController vehicleController)
+        {
+            _guideFingerController?.Hide();
+            SetHintedVehicle(null);
         }
 
         /// <summary>
@@ -559,6 +669,7 @@ namespace SCJam.LevelSystem
             _pendingBoardingByVehicleId.Clear();
             _loggedMissingPrefabColors.Clear();
             _passengerPrefabLookup = null;
+            _hintedVehicleController = null;
 
             _boardGrid = null;
             _movementResolver = null;

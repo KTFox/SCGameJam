@@ -12,6 +12,11 @@ namespace SCJam.VehicleSystem
 {
     public class VehicleController : MonoBehaviour
     {
+        // ===== Constants ===== //
+
+        private static readonly int OUTLINE_WIDTH_ID = Shader.PropertyToID("_OutlineWidth");
+
+
         // ===== Serialized Fields ===== //
 
         [SerializeField] private float _moveSpeed;
@@ -34,6 +39,9 @@ namespace SCJam.VehicleSystem
         [SerializeField] private float _bumpShakeDuration;
         [SerializeField] private int _bumpShakeVibrato;
         [SerializeField] private float _waitingLaneApproachOffset;
+        [SerializeField] private Renderer[] _hintOutlineRenderers;
+        [SerializeField] private float _hintOutlineMaxWidth;
+        [SerializeField] private float _hintOutlineBlinkDuration;
 
 
         // ===== Private Fields ===== //
@@ -49,6 +57,8 @@ namespace SCJam.VehicleSystem
         private bool _isMoving;
         private Vector3 _originalScale;
         private CancellationToken _destroyCancellationToken;
+        private Material[] _hintOutlineMaterials;
+        private Tween _hintOutlineTween;
 
 
         // ===== Public Properties ===== //
@@ -64,11 +74,13 @@ namespace SCJam.VehicleSystem
         {
             _destroyCancellationToken = this.GetCancellationTokenOnDestroy();
             SetDustPlaying(false);
+            CacheHintOutlineMaterials();
         }
 
         private void OnDisable()
         {
             SetDustPlaying(false);
+            SetHintOutlineEnabled(false);
         }
 
         public void Initialize(
@@ -140,6 +152,33 @@ namespace SCJam.VehicleSystem
                 _fullParticle.Play();
         }
 
+        /// <summary>
+        /// Toggles the blinking outline used to hint this vehicle to the player. The outline itself (color,
+        /// enabled state) is configured on the material asset; this only tweens its width between 0 and
+        /// _hintOutlineMaxWidth, since toggling TCP2's "_UseOutline" at runtime has no effect (it only
+        /// switches which shader variant a material uses when set from the material inspector).
+        /// </summary>
+        public void SetHintOutlineEnabled(bool isEnabled)
+        {
+            _hintOutlineTween?.Kill();
+            _hintOutlineTween = null;
+
+            if (_hintOutlineMaterials == null || _hintOutlineMaterials.Length == 0)
+                return;
+
+            if (!isEnabled)
+            {
+                SetOutlineWidth(0f);
+                return;
+            }
+
+            SetOutlineWidth(0f);
+
+            _hintOutlineTween = DOTween.To(GetOutlineWidth, SetOutlineWidth, _hintOutlineMaxWidth, _hintOutlineBlinkDuration)
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo);
+        }
+
         public bool CanMove()
         {
             return !_isMoving && _vehicle.State == VehicleState.Parked;
@@ -181,11 +220,14 @@ namespace SCJam.VehicleSystem
             _vehicle.ChangeState(VehicleState.MovingToExit);
 
             Vector3 exitPosition = ComputeExitWorldPosition();
-            await MoveAndFaceRoutine(exitPosition);
 
-            // Footprint-clear rule: the board cells stay occupied until the vehicle has fully left them.
+            // Released as soon as the move starts (not footprint-clear) so other vehicles' IsPathClear
+            // checks reflect this vehicle's real, currently-animating position instead of a stale
+            // grid snapshot that would otherwise mark it as blocking until it fully exits.
             _boardGrid.RemoveVehicle(_vehicle.Id);
             _vehicle.ClearFootprint();
+
+            await MoveAndFaceRoutine(exitPosition);
 
             Transform slotAnchor = _waitingAreaView.GetSlotAnchor(reservedSlot.Index);
             Vector3 slotPosition = slotAnchor.position;
@@ -318,6 +360,11 @@ namespace SCJam.VehicleSystem
             SetIsMoving(true);
             _vehicle.ChangeState(VehicleState.Departing);
 
+            // Released as soon as departure starts (not footprint-clear) so the next vehicle can
+            // reserve the slot immediately; the two vehicles may visually overlap briefly while
+            // this one is still backing/turning out.
+            _waitingAreaManager.ReleaseSlot(_reservedSlot);
+
             // Reverse straight back without rotating; MoveAndFaceRoutine would turn the vehicle
             // to face the destination, which means spinning 180 degrees while backing up.
             Vector3 reversePosition = transform.position - transform.forward * _departReverseDistance;
@@ -334,9 +381,6 @@ namespace SCJam.VehicleSystem
             await transform.DOMove(departPosition, ComputeDuration(departPosition)).SetEase(Ease.Linear)
                 .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
 
-            // Waiting-slot release timing follows the same footprint-clear rule as the board: released
-            // only once the vehicle has fully left the slot, not when departure starts.
-            _waitingAreaManager.ReleaseSlot(_reservedSlot);
             _vehicle.ChangeState(VehicleState.Completed);
             SetIsMoving(false);
             gameObject.SetActive(false);
@@ -357,6 +401,35 @@ namespace SCJam.VehicleSystem
                 _dustParticle.Play();
             else
                 _dustParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
+        /// <summary>
+        /// Instantiates one material per hint outline renderer (via Renderer.material) so the outline can
+        /// be tweened per-vehicle without affecting other vehicles sharing the same source material asset.
+        /// The outline itself must already be enabled with its color set on the source material asset.
+        /// </summary>
+        private void CacheHintOutlineMaterials()
+        {
+            if (_hintOutlineRenderers == null || _hintOutlineRenderers.Length == 0)
+                return;
+
+            _hintOutlineMaterials = new Material[_hintOutlineRenderers.Length];
+
+            for (int i = 0; i < _hintOutlineRenderers.Length; i++)
+                _hintOutlineMaterials[i] = _hintOutlineRenderers[i].material;
+
+            SetOutlineWidth(0f);
+        }
+
+        private float GetOutlineWidth()
+        {
+            return _hintOutlineMaterials[0].GetFloat(OUTLINE_WIDTH_ID);
+        }
+
+        private void SetOutlineWidth(float width)
+        {
+            foreach (Material material in _hintOutlineMaterials)
+                material.SetFloat(OUTLINE_WIDTH_ID, width);
         }
 
         private Vector3 ComputeExitWorldPosition()

@@ -408,6 +408,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2abd506ac3adb48009118c8e832bdc35, type: 3}
+--- !u!23 &2902208855063015025 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7511558181221131132, guid: 2abd506ac3adb48009118c8e832bdc35, type: 3}
+  m_PrefabInstance: {fileID: 4577665146211840757}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4039055204729607454 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2abd506ac3adb48009118c8e832bdc35, type: 3}
@@ -505,6 +510,14 @@ PrefabInstance:
       propertyPath: '_seatAnchors.Array.data[9]'
       value: 
       objectReference: {fileID: 2083814552962824375}
+    - target: {fileID: 7236163868590340891, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
+      propertyPath: _hintOutlineRenderers.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7236163868590340891, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
+      propertyPath: '_hintOutlineRenderers.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2902208855063015025}
     - target: {fileID: 7979851542056229052, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

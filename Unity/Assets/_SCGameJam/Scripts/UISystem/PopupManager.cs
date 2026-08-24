@@ -98,7 +98,7 @@ namespace SCJam.UISystem
             UpdateDimBackground();
         }
 
-        private bool TryGetPopup(PopupId popupId, out PopupBase popup)
+        public bool TryGetPopup(PopupId popupId, out PopupBase popup)
         {
             if (_popupsById.TryGetValue(popupId, out popup))
                 return true;

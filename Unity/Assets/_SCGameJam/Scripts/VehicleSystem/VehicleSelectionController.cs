@@ -1,3 +1,4 @@
+using System;
 using SCJam.InputSystem;
 using SCJam.CameraSystem;
 using UnityEngine;
@@ -10,6 +11,11 @@ namespace SCJam.VehicleSystem
 
         [SerializeField] private LayerMask _vehicleLayerMask = ~0;
         [SerializeField] private float _maxRayDistance = 100f;
+
+
+        // ===== Events ===== //
+
+        public event Action<VehicleController> VehicleSelected;
 
 
         // ===== Methods ===== //
@@ -32,6 +38,7 @@ namespace SCJam.VehicleSystem
 
             if (hit.collider.TryGetComponent(out VehicleController vehicleController))
             {
+                VehicleSelected?.Invoke(vehicleController);
                 vehicleController.RequestMove();
             }
         }

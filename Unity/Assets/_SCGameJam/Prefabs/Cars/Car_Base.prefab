@@ -91,6 +91,11 @@ MonoBehaviour:
   _bumpShakeDuration: 0.1
   _bumpShakeVibrato: 30
   _waitingLaneApproachOffset: 5
+  _hintOutlineRenderers: []
+  _hintOutlineColor: {r: 1, g: 1, b: 1, a: 1}
+  _hintOutlineMinWidth: 2
+  _hintOutlineMaxWidth: 4
+  _hintOutlineBlinkDuration: 0.5
 --- !u!1 &985200949728183731
 GameObject:
   m_ObjectHideFlags: 0

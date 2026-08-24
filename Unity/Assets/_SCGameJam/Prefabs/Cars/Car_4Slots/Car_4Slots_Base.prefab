@@ -227,6 +227,14 @@ PrefabInstance:
       propertyPath: '_seatAnchors.Array.data[3]'
       value: 
       objectReference: {fileID: 7530884353963929069}
+    - target: {fileID: 7236163868590340891, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
+      propertyPath: _hintOutlineRenderers.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7236163868590340891, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
+      propertyPath: '_hintOutlineRenderers.Array.data[0]'
+      value: 
+      objectReference: {fileID: 9025846281684675883}
     - target: {fileID: 7979851542056229052, guid: ec321acce4dc2431b8687db5b7f230c2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
