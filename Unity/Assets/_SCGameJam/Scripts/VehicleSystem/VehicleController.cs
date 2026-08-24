@@ -318,6 +318,11 @@ namespace SCJam.VehicleSystem
             SetIsMoving(true);
             _vehicle.ChangeState(VehicleState.Departing);
 
+            // Released as soon as departure starts (not footprint-clear) so the next vehicle can
+            // reserve the slot immediately; the two vehicles may visually overlap briefly while
+            // this one is still backing/turning out.
+            _waitingAreaManager.ReleaseSlot(_reservedSlot);
+
             // Reverse straight back without rotating; MoveAndFaceRoutine would turn the vehicle
             // to face the destination, which means spinning 180 degrees while backing up.
             Vector3 reversePosition = transform.position - transform.forward * _departReverseDistance;
@@ -334,9 +339,6 @@ namespace SCJam.VehicleSystem
             await transform.DOMove(departPosition, ComputeDuration(departPosition)).SetEase(Ease.Linear)
                 .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
 
-            // Waiting-slot release timing follows the same footprint-clear rule as the board: released
-            // only once the vehicle has fully left the slot, not when departure starts.
-            _waitingAreaManager.ReleaseSlot(_reservedSlot);
             _vehicle.ChangeState(VehicleState.Completed);
             SetIsMoving(false);
             gameObject.SetActive(false);
