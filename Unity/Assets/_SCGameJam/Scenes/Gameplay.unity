@@ -1546,6 +1546,8 @@ MonoBehaviour:
   _passengerSpawnRoot: {fileID: 597718613}
   _winSound: {fileID: 11400000, guid: b74fd7f419ef44b0f8b4b87b2c635e2f, type: 2}
   _loseSound: {fileID: 11400000, guid: aa0588bde0bad4551afbdffb2f16d8c2, type: 2}
+  _vehicleSelectionController: {fileID: 1128105877}
+  _guideFingerController: {fileID: 5043623436378890649}
 --- !u!1 &1826823342
 GameObject:
   m_ObjectHideFlags: 0
@@ -1921,6 +1923,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
+--- !u!114 &5043623436378890649 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7208810326643671694, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
+  m_PrefabInstance: {fileID: 5043623436378890648}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6db912e595ad4487b5a6c440c43ca4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.GuideFingerController
 --- !u!1001 &8904085123600838365
 PrefabInstance:
   m_ObjectHideFlags: 0
