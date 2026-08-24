@@ -181,11 +181,14 @@ namespace SCJam.VehicleSystem
             _vehicle.ChangeState(VehicleState.MovingToExit);
 
             Vector3 exitPosition = ComputeExitWorldPosition();
-            await MoveAndFaceRoutine(exitPosition);
 
-            // Footprint-clear rule: the board cells stay occupied until the vehicle has fully left them.
+            // Released as soon as the move starts (not footprint-clear) so other vehicles' IsPathClear
+            // checks reflect this vehicle's real, currently-animating position instead of a stale
+            // grid snapshot that would otherwise mark it as blocking until it fully exits.
             _boardGrid.RemoveVehicle(_vehicle.Id);
             _vehicle.ClearFootprint();
+
+            await MoveAndFaceRoutine(exitPosition);
 
             Transform slotAnchor = _waitingAreaView.GetSlotAnchor(reservedSlot.Index);
             Vector3 slotPosition = slotAnchor.position;
