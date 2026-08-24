@@ -8,6 +8,12 @@ namespace SCJam.AudioSystem
 {
     public class AudioManager : MonoSingleton<AudioManager>
     {
+        // ===== CONSTANTS ===== //
+
+        private const string MUSIC_ENABLED_PREF_KEY = "Audio.MusicEnabled";
+        private const string SFX_ENABLED_PREF_KEY = "Audio.SfxEnabled";
+
+
         // ===== FIELDS ===== //
 
         [Header("Volume Settings")]
@@ -31,6 +37,14 @@ namespace SCJam.AudioSystem
         private float _maxSoundDistanceSqr;
         private AudioSource _musicSource;
         private SoundSO _currentMusic;
+        private bool _isMusicEnabled;
+        private bool _isSfxEnabled;
+
+
+        // ===== PROPERTIES ===== //
+
+        public bool IsMusicEnabled => _isMusicEnabled;
+        public bool IsSfxEnabled => _isSfxEnabled;
 
 
         // ===== MONOBEHAVIOUR METHODS ===== //
@@ -40,6 +54,9 @@ namespace SCJam.AudioSystem
             base.Awake();
             InitializePool();
             _musicSource = CreateAudioSource();
+
+            _isMusicEnabled = PlayerPrefs.GetInt(MUSIC_ENABLED_PREF_KEY, 1) != 0;
+            _isSfxEnabled = PlayerPrefs.GetInt(SFX_ENABLED_PREF_KEY, 1) != 0;
         }
 
         private void Start()
@@ -49,6 +66,22 @@ namespace SCJam.AudioSystem
 
 
         // ===== METHODS ===== //
+
+        public void SetMusicEnabled(bool isEnabled)
+        {
+            _isMusicEnabled = isEnabled;
+            PlayerPrefs.SetInt(MUSIC_ENABLED_PREF_KEY, isEnabled ? 1 : 0);
+
+            _musicSource.volume = isEnabled ? _currentMusic?.Volume ?? 0f : 0f;
+            if (_currentMusic != null)
+                _musicSource.volume *= masterVolume;
+        }
+
+        public void SetSfxEnabled(bool isEnabled)
+        {
+            _isSfxEnabled = isEnabled;
+            PlayerPrefs.SetInt(SFX_ENABLED_PREF_KEY, isEnabled ? 1 : 0);
+        }
 
         public void PlaySound(SoundSO soundData)
         {
@@ -86,6 +119,10 @@ namespace SCJam.AudioSystem
             if (soundData == null || !CanPlayByCooldown(soundData))
                 return;
 
+            bool isMusicSound = soundData.AudioType == AudioType.Music;
+            if (isMusicSound ? !_isMusicEnabled : !_isSfxEnabled)
+                return;
+
             _lastPlayTimeBySound[soundData] = Time.time;
 
             AudioSource audioSource = GetFromPool();
@@ -93,7 +130,7 @@ namespace SCJam.AudioSystem
             audioSource.pitch = pitch;
             audioSource.volume = volume * masterVolume;
             audioSource.loop = soundData.Loop;
-            audioSource.outputAudioMixerGroup = soundData.AudioType == AudioType.Music ? musicMixerGroup : sfxMixerGroup;
+            audioSource.outputAudioMixerGroup = isMusicSound ? musicMixerGroup : sfxMixerGroup;
             audioSource.Play();
 
             if (!soundData.Loop)
@@ -113,7 +150,7 @@ namespace SCJam.AudioSystem
             _musicSource.Stop();
             _musicSource.clip = musicData.Clip;
             _musicSource.pitch = musicData.MaxPitch;
-            _musicSource.volume = musicData.Volume * masterVolume;
+            _musicSource.volume = _isMusicEnabled ? musicData.Volume * masterVolume : 0f;
             _musicSource.loop = musicData.Loop;
             _musicSource.outputAudioMixerGroup = musicMixerGroup;
             _musicSource.Play();
