@@ -30,6 +30,7 @@ namespace SCJam.LevelSystem
         [SerializeField] private SoundSO _loseSound;
         [SerializeField] private VehicleSelectionController _vehicleSelectionController;
         [SerializeField] private GuideFingerController _guideFingerController;
+        [SerializeField] private PlayerHandSimulator _playerHandSimulator;
         [SerializeField] private float _queueSpawnStaggerDelay;
         [SerializeField] private float _nextLevelPopupDelay;
 
@@ -709,6 +710,8 @@ namespace SCJam.LevelSystem
 
         private void ClearLevel()
         {
+            _playerHandSimulator?.Hide();
+
             foreach (GameObject spawned in _spawnedGameObjects)
             {
                 if (spawned != null)

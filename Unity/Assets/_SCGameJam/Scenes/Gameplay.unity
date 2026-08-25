@@ -1263,6 +1263,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   _maxRayDistance: 100
+  _selectionDelaySource: {fileID: 5043623436378890650}
 --- !u!1 &1166108296
 GameObject:
   m_ObjectHideFlags: 0
@@ -1548,6 +1549,7 @@ MonoBehaviour:
   _loseSound: {fileID: 11400000, guid: aa0588bde0bad4551afbdffb2f16d8c2, type: 2}
   _vehicleSelectionController: {fileID: 1128105877}
   _guideFingerController: {fileID: 5043623436378890649}
+  _playerHandSimulator: {fileID: 5043623436378890650}
   _queueSpawnStaggerDelay: 0.1
   _nextLevelPopupDelay: 1
 --- !u!1 &1826823342
@@ -1936,6 +1938,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6db912e595ad4487b5a6c440c43ca4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.GuideFingerController
+--- !u!114 &5043623436378890650 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2754131267100131987, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
+  m_PrefabInstance: {fileID: 5043623436378890648}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24b0351e700ab4726bfdc03e51e8d1d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.PlayerHandSimulator
 --- !u!1001 &8904085123600838365
 PrefabInstance:
   m_ObjectHideFlags: 0
