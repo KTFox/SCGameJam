@@ -31,6 +31,7 @@ namespace SCJam.LevelSystem
         [SerializeField] private VehicleSelectionController _vehicleSelectionController;
         [SerializeField] private GuideFingerController _guideFingerController;
         [SerializeField] private float _queueSpawnStaggerDelay;
+        [SerializeField] private float _nextLevelPopupDelay;
 
 
         // ===== Private Fields ===== //
@@ -55,6 +56,7 @@ namespace SCJam.LevelSystem
         private PopupSetting _openSettingPopup;
         private VehicleController _hintedVehicleController;
         private CancellationTokenSource _queueSpawnCancellationSource;
+        private CancellationToken _destroyCancellationToken;
 
 
         // ===== Public Properties ===== //
@@ -69,6 +71,11 @@ namespace SCJam.LevelSystem
 
 
         // ===== Unity Lifecycle Methods ===== //
+
+        private void Awake()
+        {
+            _destroyCancellationToken = this.GetCancellationTokenOnDestroy();
+        }
 
         private void Start()
         {
@@ -135,12 +142,11 @@ namespace SCJam.LevelSystem
             SpawnVehicles(levelConfig);
             BuildPassengerPrefabLookup(levelConfig);
             BuildPassengerQueue(levelConfig);
-            RefreshQueueVisuals();
 
             _levelState = LevelState.Playing;
             AudioManager.Instance?.PlayMusic(levelConfig.BackgroundMusic);
 
-            UpdateGuideFinger();
+            LoadLevelQueueRoutine().Forget(HandleQueueSpawnException);
         }
 
         private void BuildBoard(LevelConfig levelConfig)
@@ -419,7 +425,7 @@ namespace SCJam.LevelSystem
             AudioManager.Instance?.StopMusic();
             AudioManager.Instance?.PlaySound(_winSound);
             OnLevelCompleted?.Invoke();
-            ShowNextLevelPopup();
+            ShowNextLevelPopupRoutine().Forget(HandleQueueSpawnException);
         }
 
         /// <summary>
@@ -480,6 +486,14 @@ namespace SCJam.LevelSystem
             }
 
             return false;
+        }
+
+        private async UniTask ShowNextLevelPopupRoutine()
+        {
+            if (_nextLevelPopupDelay > 0f)
+                await UniTask.Delay(TimeSpan.FromSeconds(_nextLevelPopupDelay), cancellationToken: _destroyCancellationToken);
+
+            ShowNextLevelPopup();
         }
 
         private void ShowNextLevelPopup()
@@ -601,9 +615,11 @@ namespace SCJam.LevelSystem
         /// Initial spawn/layout of the passenger queue on level load: passengers spawn one at a time at the
         /// back-most (last) queue pivot and walk forward into their target slot, instead of appearing
         /// instantly at their final anchor. Boarding naturally waits for the front slot to settle via
-        /// PassengerController.IsSettledAtQueueFront, so no extra gating is needed here.
+        /// PassengerController.IsSettledAtQueueFront, so no extra gating is needed here. The guide finger
+        /// hint is shown only after this spawn-in finishes, so it never appears while passengers are
+        /// still walking into the queue.
         /// </summary>
-        private void RefreshQueueVisuals()
+        private async UniTask LoadLevelQueueRoutine()
         {
             int visibleCount = Mathf.Min(_passengerQueueView.VisiblePositionCount, _passengerQueue.Passengers.Count);
 
@@ -611,7 +627,9 @@ namespace SCJam.LevelSystem
             _queueSpawnCancellationSource?.Dispose();
             _queueSpawnCancellationSource = new CancellationTokenSource();
 
-            SpawnQueueRoutine(visibleCount, _queueSpawnCancellationSource.Token).Forget(HandleQueueSpawnException);
+            await SpawnQueueRoutine(visibleCount, _queueSpawnCancellationSource.Token);
+
+            UpdateGuideFinger();
         }
 
         private async UniTask SpawnQueueRoutine(int visibleCount, CancellationToken cancellationToken)
