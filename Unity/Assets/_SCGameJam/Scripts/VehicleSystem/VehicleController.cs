@@ -555,7 +555,7 @@ namespace SCJam.VehicleSystem
 
             float angle = Quaternion.Angle(transform.rotation, targetRotation);
             float duration = angle / _rotateSpeed;
-            await transform.DORotateQuaternion(targetRotation, duration).SetEase(Ease.Linear)
+            await transform.DORotateQuaternion(targetRotation, duration).SetEase(Ease.InOutSine)
                 .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
         }
 
