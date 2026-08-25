@@ -1548,6 +1548,7 @@ MonoBehaviour:
   _loseSound: {fileID: 11400000, guid: aa0588bde0bad4551afbdffb2f16d8c2, type: 2}
   _vehicleSelectionController: {fileID: 1128105877}
   _guideFingerController: {fileID: 5043623436378890649}
+  _queueSpawnStaggerDelay: 0.1
 --- !u!1 &1826823342
 GameObject:
   m_ObjectHideFlags: 0

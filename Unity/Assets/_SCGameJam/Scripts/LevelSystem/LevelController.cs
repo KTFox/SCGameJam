@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using SCJam.AudioSystem;
 using SCJam.BoardSystem;
 using SCJam.Common;
@@ -28,6 +30,7 @@ namespace SCJam.LevelSystem
         [SerializeField] private SoundSO _loseSound;
         [SerializeField] private VehicleSelectionController _vehicleSelectionController;
         [SerializeField] private GuideFingerController _guideFingerController;
+        [SerializeField] private float _queueSpawnStaggerDelay;
 
 
         // ===== Private Fields ===== //
@@ -51,6 +54,7 @@ namespace SCJam.LevelSystem
         private PopupLose _openLosePopup;
         private PopupSetting _openSettingPopup;
         private VehicleController _hintedVehicleController;
+        private CancellationTokenSource _queueSpawnCancellationSource;
 
 
         // ===== Public Properties ===== //
@@ -99,6 +103,10 @@ namespace SCJam.LevelSystem
 
             if (_vehicleSelectionController != null)
                 _vehicleSelectionController.VehicleSelected -= OnVehicleSelected;
+
+            _queueSpawnCancellationSource?.Cancel();
+            _queueSpawnCancellationSource?.Dispose();
+            _queueSpawnCancellationSource = null;
         }
 
 
@@ -590,12 +598,25 @@ namespace SCJam.LevelSystem
         }
 
         /// <summary>
-        /// Initial spawn/layout of the passenger queue on level load: snaps every visible passenger
-        /// straight to its anchor since nothing is mid-walk yet.
+        /// Initial spawn/layout of the passenger queue on level load: passengers spawn one at a time at the
+        /// back-most (last) queue pivot and walk forward into their target slot, instead of appearing
+        /// instantly at their final anchor. Boarding naturally waits for the front slot to settle via
+        /// PassengerController.IsSettledAtQueueFront, so no extra gating is needed here.
         /// </summary>
         private void RefreshQueueVisuals()
         {
             int visibleCount = Mathf.Min(_passengerQueueView.VisiblePositionCount, _passengerQueue.Passengers.Count);
+
+            _queueSpawnCancellationSource?.Cancel();
+            _queueSpawnCancellationSource?.Dispose();
+            _queueSpawnCancellationSource = new CancellationTokenSource();
+
+            SpawnQueueRoutine(visibleCount, _queueSpawnCancellationSource.Token).Forget(HandleQueueSpawnException);
+        }
+
+        private async UniTask SpawnQueueRoutine(int visibleCount, CancellationToken cancellationToken)
+        {
+            int lastPivotIndex = _passengerQueueView.VisiblePositionCount - 1;
 
             for (int i = 0; i < visibleCount; i++)
             {
@@ -604,11 +625,23 @@ namespace SCJam.LevelSystem
                 if (_passengerControllersById.TryGetValue(passenger.Id, out PassengerController controller))
                 {
                     controller.SnapToQueueSlot(i);
-                    continue;
+                }
+                else
+                {
+                    controller = SpawnPassengerController(passenger, lastPivotIndex);
+                    if (controller != null)
+                        controller.MoveToQueueSlot(i);
                 }
 
-                SpawnPassengerController(passenger, i);
+                if (i < visibleCount - 1 && _queueSpawnStaggerDelay > 0f)
+                    await UniTask.Delay(TimeSpan.FromSeconds(_queueSpawnStaggerDelay), cancellationToken: cancellationToken);
             }
+        }
+
+        private static void HandleQueueSpawnException(Exception exception)
+        {
+            if (exception is not OperationCanceledException)
+                Debug.LogException(exception);
         }
 
         /// <summary>
@@ -635,14 +668,14 @@ namespace SCJam.LevelSystem
             }
         }
 
-        private void SpawnPassengerController(Passenger passenger, int slotIndex)
+        private PassengerController SpawnPassengerController(Passenger passenger, int slotIndex)
         {
             if (_passengerPrefabLookup == null || !_passengerPrefabLookup.TryGetPrefab(passenger.Color, out PassengerController prefab))
             {
                 if (_loggedMissingPrefabColors.Add(passenger.Color))
                     Debug.LogError($"No passenger prefab available for color {passenger.Color}; passenger {passenger.Id} will not be spawned.", this);
 
-                return;
+                return null;
             }
 
             Transform queueTransform = _passengerQueueView.GetQueueTransform(slotIndex);
@@ -652,6 +685,8 @@ namespace SCJam.LevelSystem
 
             _passengerControllersById[passenger.Id] = controller;
             _spawnedGameObjects.Add(controller.gameObject);
+
+            return controller;
         }
 
         private void ClearLevel()
