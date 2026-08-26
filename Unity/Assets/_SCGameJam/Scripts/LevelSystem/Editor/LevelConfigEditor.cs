@@ -57,6 +57,9 @@ namespace SCJam.LevelSystem.Editor
             DrawJsonImportSection();
 
             EditorGUILayout.Space();
+            DrawSolvabilitySection();
+
+            EditorGUILayout.Space();
             EditorGUILayout.PropertyField(_vehiclePlacementsProperty, true);
 
             EditorGUILayout.Space();
@@ -84,6 +87,43 @@ namespace SCJam.LevelSystem.Editor
                 ImportVehiclePlacementsFromJson();
 
             EditorGUILayout.EndVertical();
+        }
+
+        private void DrawSolvabilitySection()
+        {
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+            EditorGUILayout.LabelField("Solvability", EditorStyles.boldLabel);
+
+            if (GUILayout.Button("Check Solvability"))
+                CheckSolvability();
+
+            EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Runs LevelSolvabilityChecker against this level and logs the verdict. On success, logs each step
+        /// of a winning vehicle order (which vehicle exits to the waiting area, and every passenger-boarding
+        /// / vehicle-departure event that follows) so a designer can see exactly how the level is cleared.
+        /// </summary>
+        private void CheckSolvability()
+        {
+            LevelConfig levelConfig = (LevelConfig)target;
+            LevelSolvabilityChecker.SolveResult result = LevelSolvabilityChecker.Solve(levelConfig);
+
+            if (result.IsSolved)
+            {
+                Debug.Log($"Level '{levelConfig.name}': SOLVABLE in {result.MoveOrder.Count} moves (explored {result.VisitedNodeCount} states).", levelConfig);
+                foreach (string step in result.StepLog)
+                    Debug.Log(step, levelConfig);
+            }
+            else if (result.IsInconclusive)
+            {
+                Debug.LogWarning($"Level '{levelConfig.name}': INCONCLUSIVE, {result.Message}", levelConfig);
+            }
+            else
+            {
+                Debug.LogError($"Level '{levelConfig.name}': UNSOLVABLE, {result.Message}", levelConfig);
+            }
         }
 
         /// <summary>
