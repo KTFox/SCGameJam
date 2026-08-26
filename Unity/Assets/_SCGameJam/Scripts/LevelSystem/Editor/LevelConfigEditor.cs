@@ -422,15 +422,21 @@ namespace SCJam.LevelSystem.Editor
         }
 
         /// <summary>
-        /// Rebuilds the passenger color sequence from the level's vehicle placements. Vehicles are processed
-        /// in batches no larger than the waiting slot count: within a batch, all capacity is pooled per
-        /// color (not per vehicle) since BoardingResolver matches a waiting vehicle by color alone and cannot
-        /// tell apart two same-colored vehicles waiting at once — generating distinct interleaved runs per
-        /// vehicle would desync from which physical vehicle actually consumes each passenger and can
-        /// deadlock the queue. A batch's passengers are fully emitted (every color in it exhausted) before
-        /// the next batch's colors enter the sequence. This caps how many distinct colors must be waiting at
-        /// once to consume the front of the queue at waiting slot count, so the waiting area can never end up
-        /// deadlocked — full of not-yet-full vehicles with no free slot for the color next in line.
+        /// Rebuilds the passenger color sequence from a vehicle order that is actually reachable in play,
+        /// instead of the raw _vehiclePlacements array order: at each step it only considers vehicles that
+        /// are still Parked and currently have a clear exit path (mirroring VehicleMovementResolver.IsPathClear
+        /// and LevelSolvabilityChecker), so a vehicle blocked by another vehicle placed later in the array is
+        /// never scheduled before its blocker leaves. Vehicles are processed in batches no larger than the
+        /// waiting slot count, taking only currently-movable vehicles per batch (deferring any that are still
+        /// blocked to a later batch, once earlier batches have vacated their board cells); within a batch, all
+        /// capacity is pooled per color (not per vehicle) since BoardingResolver matches a waiting vehicle by
+        /// color alone and cannot tell apart two same-colored vehicles waiting at once — generating distinct
+        /// interleaved runs per vehicle would desync from which physical vehicle actually consumes each
+        /// passenger and can deadlock the queue. A batch's passengers are fully emitted (every color in it
+        /// exhausted) before the next batch's colors enter the sequence. This caps how many distinct colors
+        /// must be waiting at once to consume the front of the queue at waiting slot count, and since the
+        /// batch order itself is a valid vehicle-release order, the generated sequence is guaranteed solvable
+        /// by releasing vehicles in that same order.
         /// </summary>
         private void GenerateColorSequence()
         {
@@ -444,14 +450,19 @@ namespace SCJam.LevelSystem.Editor
             }
 
             int waitingSlotCount = Mathf.Max(1, _waitingSlotCountProperty.intValue);
+            List<List<VehiclePlacement>> releaseBatches = BuildReachableReleaseBatches(levelConfig.BoardSize, placements, waitingSlotCount);
+
+            if (releaseBatches == null)
+            {
+                Debug.LogError($"Level '{levelConfig.name}': could not find a vehicle release order that clears the board (a vehicle's exit path never becomes clear). Color sequence was not changed.", levelConfig);
+                return;
+            }
+
             System.Random random = new();
             List<PuzzleColor> colorSequence = new();
 
-            for (int batchStart = 0; batchStart < placements.Count; batchStart += waitingSlotCount)
-            {
-                int batchSize = Mathf.Min(waitingSlotCount, placements.Count - batchStart);
-                AppendBatchColorSequence(placements, batchStart, batchSize, random, colorSequence);
-            }
+            foreach (List<VehiclePlacement> batch in releaseBatches)
+                AppendBatchColorSequence(batch, random, colorSequence);
 
             _passengerColorSequenceProperty.arraySize = colorSequence.Count;
             for (int i = 0; i < colorSequence.Count; i++)
@@ -464,25 +475,124 @@ namespace SCJam.LevelSystem.Editor
         }
 
         /// <summary>
-        /// Pools remaining capacity per color across the vehicles in placements[batchStart, batchStart +
-        /// batchSize), then round-robins across colors, appending to colorSequence, until every color's pool
-        /// is exhausted. Each round emits a randomized run of MAX_COLOR_STREAK_LENGTH passengers (capped by
-        /// that color's remaining pool) of the current color before moving to the next, so the sequence still
-        /// interleaves colors but with more same-color runs than a strict one-at-a-time rotation.
+        /// Greedily groups placements into release batches of up to waitingSlotCount vehicles: each batch
+        /// takes every still-parked vehicle whose exit path is currently clear (mirroring
+        /// VehicleMovementResolver.IsPathClear against only the remaining still-parked vehicles), capped at
+        /// waitingSlotCount and preferring _vehiclePlacements array order among ties so the result stays as
+        /// close as possible to the original authoring order. Returns null if a full pass finds no movable
+        /// vehicle while placements remain (the layout itself has no valid release order, independent of
+        /// passenger colors).
+        /// </summary>
+        private static List<List<VehiclePlacement>> BuildReachableReleaseBatches(Vector2Int boardSize, List<VehiclePlacement> placements, int waitingSlotCount)
+        {
+            List<VehiclePlacement> remaining = new(placements);
+            List<List<VehiclePlacement>> batches = new();
+
+            while (remaining.Count > 0)
+            {
+                List<VehiclePlacement> batch = new();
+
+                foreach (VehiclePlacement placement in remaining)
+                {
+                    if (batch.Count >= waitingSlotCount)
+                        break;
+
+                    if (IsExitPathClear(boardSize, placement, remaining))
+                        batch.Add(placement);
+                }
+
+                if (batch.Count == 0)
+                    return null;
+
+                foreach (VehiclePlacement placement in batch)
+                    remaining.Remove(placement);
+
+                batches.Add(batch);
+            }
+
+            return batches;
+        }
+
+        /// <summary>
+        /// Mirrors VehicleMovementResolver.IsPathClear: every cell swept from the vehicle's oriented footprint
+        /// to the board boundary along its fixed MovementDirection must be free of every other still-parked
+        /// vehicle's footprint.
+        /// </summary>
+        private static bool IsExitPathClear(Vector2Int boardSize, VehiclePlacement placement, List<VehiclePlacement> stillParked)
+        {
+            HashSet<Vector2Int> occupiedCells = new();
+            foreach (VehiclePlacement other in stillParked)
+            {
+                if (other == placement)
+                    continue;
+
+                Vector2Int otherFootprintSize = GetOrientedFootprintSize(other.VehicleConfig.FootprintSize, other.MovementDirection);
+                foreach (Vector2Int cell in GetFootprintCells(other.OriginCell, otherFootprintSize))
+                    occupiedCells.Add(cell);
+            }
+
+            Vector2Int footprintSize = GetOrientedFootprintSize(placement.VehicleConfig.FootprintSize, placement.MovementDirection);
+            Vector2Int step = GetDirectionStep(placement.MovementDirection);
+
+            foreach (Vector2Int footprintCell in GetFootprintCells(placement.OriginCell, footprintSize))
+            {
+                Vector2Int current = footprintCell + step;
+                while (current.x >= 0 && current.x < boardSize.x && current.y >= 0 && current.y < boardSize.y)
+                {
+                    if (occupiedCells.Contains(current))
+                        return false;
+
+                    current += step;
+                }
+            }
+
+            return true;
+        }
+
+        private static Vector2Int GetOrientedFootprintSize(Vector2Int footprintSize, GridDirection movementDirection)
+        {
+            return movementDirection is GridDirection.Left or GridDirection.Right
+                ? new Vector2Int(footprintSize.y, footprintSize.x)
+                : footprintSize;
+        }
+
+        private static IEnumerable<Vector2Int> GetFootprintCells(Vector2Int originCell, Vector2Int footprintSize)
+        {
+            for (int x = 0; x < footprintSize.x; x++)
+                for (int y = 0; y < footprintSize.y; y++)
+                    yield return originCell + new Vector2Int(x, y);
+        }
+
+        private static Vector2Int GetDirectionStep(GridDirection direction)
+        {
+            return direction switch
+            {
+                GridDirection.Up => new Vector2Int(0, 1),
+                GridDirection.Down => new Vector2Int(0, -1),
+                GridDirection.Left => new Vector2Int(-1, 0),
+                GridDirection.Right => new Vector2Int(1, 0),
+                _ => Vector2Int.zero
+            };
+        }
+
+        /// <summary>
+        /// Pools remaining capacity per color across a release batch, then round-robins across colors,
+        /// appending to colorSequence, until every color's pool is exhausted. Each round emits a randomized
+        /// run of MAX_COLOR_STREAK_LENGTH passengers (capped by that color's remaining pool) of the current
+        /// color before moving to the next, so the sequence still interleaves colors but with more same-color
+        /// runs than a strict one-at-a-time rotation.
         /// </summary>
         private static void AppendBatchColorSequence(
-            List<VehiclePlacement> placements,
-            int batchStart,
-            int batchSize,
+            List<VehiclePlacement> batch,
             System.Random random,
             List<PuzzleColor> colorSequence)
         {
             List<PuzzleColor> colors = new();
             Dictionary<PuzzleColor, int> remainingCapacityByColor = new();
 
-            for (int i = 0; i < batchSize; i++)
+            foreach (VehiclePlacement placement in batch)
             {
-                VehicleConfig vehicleConfig = placements[batchStart + i].VehicleConfig;
+                VehicleConfig vehicleConfig = placement.VehicleConfig;
                 PuzzleColor color = vehicleConfig.Color;
                 int capacity = Mathf.Max(1, vehicleConfig.Capacity);
 
