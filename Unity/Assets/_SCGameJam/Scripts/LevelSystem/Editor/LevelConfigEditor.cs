@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using SCJam.Common;
 using SCJam.PassengerSystem;
@@ -14,6 +16,8 @@ namespace SCJam.LevelSystem.Editor
         // ===== Constants ===== //
 
         private const int MAX_COLOR_STREAK_LENGTH = 3;
+        private const string VEHICLE_CONFIG_SEARCH_FOLDER = "Assets/_SCGameJam/ScriptableObjects/Vehicles";
+        private const string PASSENGER_PREFAB_SEARCH_FOLDER = "Assets/_SCGameJam/Prefabs/Passengers";
 
 
         // ===== Private Fields ===== //
@@ -26,6 +30,7 @@ namespace SCJam.LevelSystem.Editor
         private SerializedProperty _passengerColorSequenceProperty;
 
         private GUIStyle _passengerSectionTitleStyle;
+        private string _levelJsonPath = "";
 
 
         // ===== Methods ===== //
@@ -49,12 +54,302 @@ namespace SCJam.LevelSystem.Editor
             EditorGUILayout.PropertyField(_backgroundMusicProperty);
 
             EditorGUILayout.Space();
+            DrawJsonImportSection();
+
+            EditorGUILayout.Space();
             EditorGUILayout.PropertyField(_vehiclePlacementsProperty, true);
 
             EditorGUILayout.Space();
             DrawPassengerSection();
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawJsonImportSection()
+        {
+            EditorGUILayout.BeginVertical(GUI.skin.box);
+            EditorGUILayout.LabelField("Import From JSON", EditorStyles.boldLabel);
+
+            EditorGUILayout.BeginHorizontal();
+            _levelJsonPath = EditorGUILayout.TextField("Level JSON File", _levelJsonPath);
+            if (GUILayout.Button("Browse...", GUILayout.Width(80)))
+            {
+                string selectedPath = EditorUtility.OpenFilePanel("Select Level JSON", Application.dataPath, "json");
+                if (!string.IsNullOrEmpty(selectedPath))
+                    _levelJsonPath = selectedPath;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Import Vehicle Placements From JSON"))
+                ImportVehiclePlacementsFromJson();
+
+            EditorGUILayout.EndVertical();
+        }
+
+        /// <summary>
+        /// Imports board size and vehicle placements from a bus-arrow level JSON file (grid size, and per
+        /// vehicle: row/column of its head cell, direction, length, color, passenger capacity). A vehicle's
+        /// head cell is r,c itself; its body extends len-1 cells opposite its facing direction (e.g. dir "R"
+        /// means the head is the rightmost cell and the body extends left). The JSON's row/column origin is
+        /// the top-left cell with row increasing downward; Unity's grid origin is the bottom-left cell with Y
+        /// increasing upward, so the importer flips the row axis while keeping the column axis (X) unchanged.
+        /// Matches each vehicle to an existing VehicleConfig asset under VEHICLE_CONFIG_SEARCH_FOLDER by
+        /// (color, capacity).
+        /// </summary>
+        private void ImportVehiclePlacementsFromJson()
+        {
+            LevelConfig levelConfig = (LevelConfig)target;
+
+            if (string.IsNullOrEmpty(_levelJsonPath) || !File.Exists(_levelJsonPath))
+            {
+                Debug.LogError($"Level '{levelConfig.name}': JSON import path is empty or does not point to an existing file.", levelConfig);
+                return;
+            }
+
+            string json = File.ReadAllText(_levelJsonPath);
+            BusArrowLevelJson levelJson = BusArrowLevelJson.Parse(json);
+
+            if (levelJson.Grid <= 0)
+            {
+                Debug.LogError($"Level '{levelConfig.name}': JSON import failed, could not read a valid \"grid\" size from {_levelJsonPath}.", levelConfig);
+                return;
+            }
+
+            Dictionary<string, VehicleConfig> vehicleConfigsByKey = LoadVehicleConfigsByColorAndCapacity();
+            List<(Vector2Int originCell, GridDirection direction, VehicleConfig vehicleConfig)> resolvedPlacements = new();
+            bool hasError = false;
+
+            foreach (BusArrowVehicleJson vehicleJson in levelJson.Vehicles)
+            {
+                if (!TryGetGridDirection(vehicleJson.Dir, out GridDirection direction))
+                {
+                    Debug.LogError($"Level '{levelConfig.name}': vehicle id {vehicleJson.Id} has unrecognized direction \"{vehicleJson.Dir}\".", levelConfig);
+                    hasError = true;
+                    continue;
+                }
+
+                if (!TryGetPuzzleColor(vehicleJson.Color, out PuzzleColor color))
+                {
+                    Debug.LogError($"Level '{levelConfig.name}': vehicle id {vehicleJson.Id} has unrecognized color \"{vehicleJson.Color}\".", levelConfig);
+                    hasError = true;
+                    continue;
+                }
+
+                string vehicleConfigKey = GetVehicleConfigKey(color, vehicleJson.Passengers);
+                if (!vehicleConfigsByKey.TryGetValue(vehicleConfigKey, out VehicleConfig vehicleConfig))
+                {
+                    Debug.LogError($"Level '{levelConfig.name}': vehicle id {vehicleJson.Id} needs a VehicleConfig with color {color} and capacity {vehicleJson.Passengers}, but none was found under {VEHICLE_CONFIG_SEARCH_FOLDER}.", levelConfig);
+                    hasError = true;
+                    continue;
+                }
+
+                Vector2Int originCell = GetOriginCell(vehicleJson.R, vehicleJson.C, vehicleJson.Len, direction, levelJson.Grid);
+                resolvedPlacements.Add((originCell, direction, vehicleConfig));
+            }
+
+            if (hasError)
+            {
+                Debug.LogError($"Level '{levelConfig.name}': JSON import aborted due to unresolved vehicles above. No changes were applied.", levelConfig);
+                return;
+            }
+
+            if (!TryValidatePlacements(levelConfig.name, levelJson.Grid, resolvedPlacements))
+                return;
+
+            _boardSizeProperty.vector2IntValue = new Vector2Int(levelJson.Grid, levelJson.Grid);
+
+            _vehiclePlacementsProperty.arraySize = resolvedPlacements.Count;
+            for (int i = 0; i < resolvedPlacements.Count; i++)
+            {
+                SerializedProperty element = _vehiclePlacementsProperty.GetArrayElementAtIndex(i);
+                element.FindPropertyRelative("_vehicleConfig").objectReferenceValue = resolvedPlacements[i].vehicleConfig;
+                element.FindPropertyRelative("_originCell").vector2IntValue = resolvedPlacements[i].originCell;
+                element.FindPropertyRelative("_movementDirection").enumValueIndex = (int)resolvedPlacements[i].direction;
+            }
+
+            serializedObject.ApplyModifiedProperties();
+
+            InitPassengerPrefabMappings();
+            AssignPassengerPrefabsByColorName();
+            GenerateColorSequence();
+
+            EditorUtility.SetDirty(levelConfig);
+            Debug.Log($"Level '{levelConfig.name}': imported {resolvedPlacements.Count} vehicle placements from {_levelJsonPath}.", levelConfig);
+        }
+
+        /// <summary>
+        /// Fills in any passenger prefab mapping that is still missing a prefab by matching PASSENGER_PREFAB_SEARCH_FOLDER
+        /// for a prefab named "Passenger_{PuzzleColor}" (e.g. "Passenger_Pink"). Mappings that already have a
+        /// prefab assigned are left untouched.
+        /// </summary>
+        private void AssignPassengerPrefabsByColorName()
+        {
+            LevelConfig levelConfig = (LevelConfig)target;
+            Dictionary<PuzzleColor, PassengerController> passengerPrefabsByColor = LoadPassengerPrefabsByColorName();
+
+            for (int i = 0; i < _passengerPrefabMappingsProperty.arraySize; i++)
+            {
+                SerializedProperty element = _passengerPrefabMappingsProperty.GetArrayElementAtIndex(i);
+                SerializedProperty prefabProperty = element.FindPropertyRelative("_prefab");
+                if (prefabProperty.objectReferenceValue != null)
+                    continue;
+
+                PuzzleColor color = (PuzzleColor)element.FindPropertyRelative("_color").enumValueIndex;
+                if (passengerPrefabsByColor.TryGetValue(color, out PassengerController prefab))
+                {
+                    prefabProperty.objectReferenceValue = prefab;
+                }
+                else
+                {
+                    Debug.LogWarning($"Level '{levelConfig.name}': no passenger prefab named \"Passenger_{color}\" found under {PASSENGER_PREFAB_SEARCH_FOLDER} for color {color}.", levelConfig);
+                }
+            }
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        private static Dictionary<PuzzleColor, PassengerController> LoadPassengerPrefabsByColorName()
+        {
+            Dictionary<PuzzleColor, PassengerController> passengerPrefabsByColor = new();
+            string[] guids = AssetDatabase.FindAssets("t:GameObject", new[] { PASSENGER_PREFAB_SEARCH_FOLDER });
+
+            foreach (string guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                string fileName = Path.GetFileNameWithoutExtension(path);
+
+                if (!fileName.StartsWith("Passenger_", StringComparison.Ordinal))
+                    continue;
+
+                string colorName = fileName["Passenger_".Length..];
+                if (!Enum.TryParse(colorName, false, out PuzzleColor color))
+                    continue;
+
+                PassengerController prefab = AssetDatabase.LoadAssetAtPath<PassengerController>(path);
+                if (prefab != null)
+                    passengerPrefabsByColor[color] = prefab;
+            }
+
+            return passengerPrefabsByColor;
+        }
+
+        /// <summary>
+        /// Converts a vehicle's JSON head cell (row increasing downward, column increasing rightward; body
+        /// extends len-1 cells opposite the facing direction) into Unity's bottom-left, Y-up origin cell used
+        /// by VehiclePlacement.
+        /// </summary>
+        private static Vector2Int GetOriginCell(int r, int c, int len, GridDirection direction, int gridSize)
+        {
+            int maxRow = direction == GridDirection.Up ? r + len - 1 : r;
+            int minCol = direction == GridDirection.Right ? c - len + 1 : c;
+
+            int originY = gridSize - 1 - maxRow;
+            return new Vector2Int(minCol, originY);
+        }
+
+        private static bool TryValidatePlacements(
+            string levelName,
+            int gridSize,
+            List<(Vector2Int originCell, GridDirection direction, VehicleConfig vehicleConfig)> placements)
+        {
+            Dictionary<Vector2Int, int> occupiedCells = new();
+            bool isValid = true;
+
+            for (int i = 0; i < placements.Count; i++)
+            {
+                (Vector2Int originCell, GridDirection direction, VehicleConfig vehicleConfig) = placements[i];
+                Vector2Int footprintSize = direction is GridDirection.Left or GridDirection.Right
+                    ? new Vector2Int(vehicleConfig.FootprintSize.y, vehicleConfig.FootprintSize.x)
+                    : vehicleConfig.FootprintSize;
+
+                for (int x = 0; x < footprintSize.x; x++)
+                {
+                    for (int y = 0; y < footprintSize.y; y++)
+                    {
+                        Vector2Int cell = originCell + new Vector2Int(x, y);
+                        if (cell.x < 0 || cell.x >= gridSize || cell.y < 0 || cell.y >= gridSize)
+                        {
+                            Debug.LogError($"Level '{levelName}': placement {i} ({vehicleConfig.name}) occupies out-of-bounds cell {cell} for grid size {gridSize}.");
+                            isValid = false;
+                            continue;
+                        }
+
+                        if (occupiedCells.TryGetValue(cell, out int otherIndex))
+                        {
+                            Debug.LogError($"Level '{levelName}': placement {i} ({vehicleConfig.name}) overlaps placement {otherIndex} at cell {cell}.");
+                            isValid = false;
+                            continue;
+                        }
+
+                        occupiedCells[cell] = i;
+                    }
+                }
+            }
+
+            if (!isValid)
+                Debug.LogError($"Level '{levelName}': JSON import aborted due to validation errors above. No changes were applied.");
+
+            return isValid;
+        }
+
+        private static Dictionary<string, VehicleConfig> LoadVehicleConfigsByColorAndCapacity()
+        {
+            Dictionary<string, VehicleConfig> vehicleConfigsByKey = new();
+            string[] guids = AssetDatabase.FindAssets("t:VehicleConfig", new[] { VEHICLE_CONFIG_SEARCH_FOLDER });
+
+            foreach (string guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                VehicleConfig vehicleConfig = AssetDatabase.LoadAssetAtPath<VehicleConfig>(path);
+                if (vehicleConfig == null)
+                    continue;
+
+                vehicleConfigsByKey[GetVehicleConfigKey(vehicleConfig.Color, vehicleConfig.Capacity)] = vehicleConfig;
+            }
+
+            return vehicleConfigsByKey;
+        }
+
+        private static string GetVehicleConfigKey(PuzzleColor color, int capacity)
+        {
+            return $"{color}_{capacity}";
+        }
+
+        private static bool TryGetGridDirection(string dir, out GridDirection direction)
+        {
+            switch (dir)
+            {
+                case "U":
+                    direction = GridDirection.Up;
+                    return true;
+                case "D":
+                    direction = GridDirection.Down;
+                    return true;
+                case "L":
+                    direction = GridDirection.Left;
+                    return true;
+                case "R":
+                    direction = GridDirection.Right;
+                    return true;
+                default:
+                    direction = default;
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Maps a bus-arrow JSON color name to a PuzzleColor. JSON levels use "red" for a color with no
+        /// direct PuzzleColor equivalent; per project decision this maps to Pink.
+        /// </summary>
+        private static bool TryGetPuzzleColor(string color, out PuzzleColor puzzleColor)
+        {
+            if (string.Equals(color, "red", StringComparison.OrdinalIgnoreCase))
+            {
+                puzzleColor = PuzzleColor.Pink;
+                return true;
+            }
+
+            return Enum.TryParse(color, true, out puzzleColor);
         }
 
         private void DrawPassengerSection()
@@ -246,5 +541,43 @@ namespace SCJam.LevelSystem.Editor
                 .Where(placement => placement?.VehicleConfig != null)
                 .ToList();
         }
+    }
+
+    /// <summary>
+    /// Mirrors the bus-arrow level JSON schema (grid size and vehicles) for JsonUtility deserialization.
+    /// </summary>
+    [Serializable]
+    internal sealed class BusArrowLevelJson
+    {
+        public int grid;
+        public BusArrowVehicleJson[] vehicles;
+
+        public int Grid => grid;
+        public IReadOnlyList<BusArrowVehicleJson> Vehicles => vehicles ?? Array.Empty<BusArrowVehicleJson>();
+
+        public static BusArrowLevelJson Parse(string json)
+        {
+            return JsonUtility.FromJson<BusArrowLevelJson>(json);
+        }
+    }
+
+    [Serializable]
+    internal sealed class BusArrowVehicleJson
+    {
+        public int id;
+        public int r;
+        public int c;
+        public string dir;
+        public int len;
+        public string color;
+        public int passengers;
+
+        public int Id => id;
+        public int R => r;
+        public int C => c;
+        public string Dir => dir;
+        public int Len => len;
+        public string Color => color;
+        public int Passengers => passengers;
     }
 }
