@@ -1,0 +1,154 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc5aaaf29cf8143c0997dd029190787d, type: 3}
+  m_Name: Level_29
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.LevelSystem.LevelConfig
+  _boardSize: {x: 12, y: 12}
+  _waitingSlotCount: 4
+  _backgroundMusic: {fileID: 0}
+  _vehiclePlacements:
+  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+    _originCell: {x: 3, y: 5}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 82bd7c36fe8148b59d1f8ca0f1d2cb47, type: 2}
+    _originCell: {x: 7, y: 3}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 82bd7c36fe8148b59d1f8ca0f1d2cb47, type: 2}
+    _originCell: {x: 3, y: 6}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+    _originCell: {x: 8, y: 2}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 337b6956326249dda9f757e0a9be069c, type: 2}
+    _originCell: {x: 9, y: 3}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 20f139918c634d86b4283dc5e8065ee6, type: 2}
+    _originCell: {x: 2, y: 5}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 82bd7c36fe8148b59d1f8ca0f1d2cb47, type: 2}
+    _originCell: {x: 1, y: 5}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+    _originCell: {x: 10, y: 2}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+    _originCell: {x: 0, y: 5}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 337b6956326249dda9f757e0a9be069c, type: 2}
+    _originCell: {x: 3, y: 4}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+    _originCell: {x: 11, y: 4}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 82bd7c36fe8148b59d1f8ca0f1d2cb47, type: 2}
+    _originCell: {x: 3, y: 8}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+    _originCell: {x: 11, y: 0}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+    _originCell: {x: 4, y: 8}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 20f139918c634d86b4283dc5e8065ee6, type: 2}
+    _originCell: {x: 3, y: 3}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 84c6608d0bf6943b79ece3158edeb1c0, type: 2}
+    _originCell: {x: 3, y: 7}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: e014121f49e04af1887b9b80ecb3a23f, type: 2}
+    _originCell: {x: 10, y: 6}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: e014121f49e04af1887b9b80ecb3a23f, type: 2}
+    _originCell: {x: 8, y: 1}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: e014121f49e04af1887b9b80ecb3a23f, type: 2}
+    _originCell: {x: 9, y: 7}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 507fe98388af467f92f85c230abc7f48, type: 2}
+    _originCell: {x: 0, y: 4}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 84c6608d0bf6943b79ece3158edeb1c0, type: 2}
+    _originCell: {x: 6, y: 7}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: 507fe98388af467f92f85c230abc7f48, type: 2}
+    _originCell: {x: 7, y: 0}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 507fe98388af467f92f85c230abc7f48, type: 2}
+    _originCell: {x: 8, y: 0}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: e014121f49e04af1887b9b80ecb3a23f, type: 2}
+    _originCell: {x: 5, y: 8}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: 84c6608d0bf6943b79ece3158edeb1c0, type: 2}
+    _originCell: {x: 2, y: 1}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: ff78025ead3ec4d0ab6731b488eb1330, type: 2}
+    _originCell: {x: 3, y: 2}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 507fe98388af467f92f85c230abc7f48, type: 2}
+    _originCell: {x: 5, y: 9}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: e014121f49e04af1887b9b80ecb3a23f, type: 2}
+    _originCell: {x: 0, y: 9}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 84c6608d0bf6943b79ece3158edeb1c0, type: 2}
+    _originCell: {x: 1, y: 0}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 429ada450c2d49c5ac45b5d3667cf829, type: 2}
+    _originCell: {x: 8, y: 9}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 6cd22f16af8f642c2b9e31b686f5bcbb, type: 2}
+    _originCell: {x: 1, y: 10}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 429ada450c2d49c5ac45b5d3667cf829, type: 2}
+    _originCell: {x: 6, y: 1}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 5f35bae432379429d95437be386a2f8a, type: 2}
+    _originCell: {x: 6, y: 10}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: 429ada450c2d49c5ac45b5d3667cf829, type: 2}
+    _originCell: {x: 0, y: 3}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 0d62b675f3bc4092a1a2a31a1dccf633, type: 2}
+    _originCell: {x: 5, y: 11}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: 5f35bae432379429d95437be386a2f8a, type: 2}
+    _originCell: {x: 4, y: 1}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: 429ada450c2d49c5ac45b5d3667cf829, type: 2}
+    _originCell: {x: 10, y: 9}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: 0d62b675f3bc4092a1a2a31a1dccf633, type: 2}
+    _originCell: {x: 10, y: 10}
+    _movementDirection: 0
+  - _vehicleConfig: {fileID: 11400000, guid: 0d62b675f3bc4092a1a2a31a1dccf633, type: 2}
+    _originCell: {x: 0, y: 11}
+    _movementDirection: 2
+  - _vehicleConfig: {fileID: 11400000, guid: 0d62b675f3bc4092a1a2a31a1dccf633, type: 2}
+    _originCell: {x: 8, y: 11}
+    _movementDirection: 3
+  - _vehicleConfig: {fileID: 11400000, guid: 429ada450c2d49c5ac45b5d3667cf829, type: 2}
+    _originCell: {x: 0, y: 0}
+    _movementDirection: 1
+  - _vehicleConfig: {fileID: 11400000, guid: 6cd22f16af8f642c2b9e31b686f5bcbb, type: 2}
+    _originCell: {x: 2, y: 0}
+    _movementDirection: 3
+  _passengerPrefabMappings:
+  - _color: 1
+    _prefab: {fileID: 3537369575937337948, guid: df32b9fa6f3f24b2eb750f726397deaf, type: 3}
+  - _color: 3
+    _prefab: {fileID: 3537369575937337948, guid: 34fc672d64fd5479b96f0040e11e9444, type: 3}
+  - _color: 5
+    _prefab: {fileID: 3537369575937337948, guid: d01acf461a1c34cfe8843e511ecfc780, type: 3}
+  - _color: 8
+    _prefab: {fileID: 3537369575937337948, guid: fcddcde32a541477e8d1bb63ab4734b8, type: 3}
+  _passengerColorSequence: 01000000010000000100000003000000030000000800000001000000010000000100000003000000080000000800000001000000010000000300000003000000030000000800000001000000010000000300000003000000080000000800000003000000030000000300000003000000030000000300000003000000030000000300000003000000030000000300000005000000030000000800000008000000080000000500000003000000080000000800000008000000050000000500000003000000030000000300000005000000050000000500000003000000030000000300000005000000030000000300000005000000050000000500000005000000050000000500000005000000050000000100000001000000080000000800000005000000010000000100000001000000080000000800000005000000010000000100000008000000080000000500000005000000050000000100000005000000010000000100000001000000010000000100000001000000010000000100000003000000030000000300000005000000050000000800000008000000030000000500000005000000080000000800000003000000030000000300000005000000050000000800000008000000030000000300000003000000050000000500000005000000030000000300000005000000030000000300000008000000080000000800000008000000080000000800000008000000080000000800000008000000080000000800000008000000080000000800000008000000080000000800000008000000080000000800000008000000010000000100000005000000050000000100000005000000010000000100000005000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000080000000500000003000000080000000500000005000000050000000300000003000000080000000800000008000000050000000500000005000000030000000300000008000000080000000500000005000000030000000800000008000000050000000800000003000000050000000500000005000000080000000800000003000000030000000300000005000000080000000800000003000000030000000300000003000000030000000300000003000000030000000300000003000000030000000300000003000000030000000300000003000000030000000100000001000000050000000500000008000000080000000300000003000000030000000100000001000000010000000500000008000000080000000300000003000000030000000100000001000000050000000500000003000000010000000100000001000000050000000300000003000000010000000100000001000000050000000500000001000000010000000500000001000000010000000500000001000000010000000500000005000000050000000100000005000000050000000500000001000000010000000100000003000000030000000100000001000000030000000300000001000000

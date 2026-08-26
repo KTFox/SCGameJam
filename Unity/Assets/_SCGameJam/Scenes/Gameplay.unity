@@ -1545,6 +1545,7 @@ MonoBehaviour:
   _passengerQueueView: {fileID: 158309919}
   _vehicleSpawnRoot: {fileID: 1498448901}
   _passengerSpawnRoot: {fileID: 597718613}
+  _backgroundMusic: {fileID: 11400000, guid: 6fa4933d3fd38447aa16e43524a9b061, type: 2}
   _winSound: {fileID: 11400000, guid: b74fd7f419ef44b0f8b4b87b2c635e2f, type: 2}
   _loseSound: {fileID: 11400000, guid: aa0588bde0bad4551afbdffb2f16d8c2, type: 2}
   _vehicleSelectionController: {fileID: 1128105877}
