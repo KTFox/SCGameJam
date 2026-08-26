@@ -49,7 +49,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24b0351e700ab4726bfdc03e51e8d1d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.PlayerHandSimulator
-  _isSimulationEnabled: 1
+  _isSimulationEnabled: 0
   _worldOffset: {x: 0.5, y: 0, z: 0}
   _moveDuration: 0.3
   _moveEase: 1

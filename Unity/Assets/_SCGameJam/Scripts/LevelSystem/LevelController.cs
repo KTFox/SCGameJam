@@ -26,6 +26,7 @@ namespace SCJam.LevelSystem
         [SerializeField] private PassengerQueueView _passengerQueueView;
         [SerializeField] private Transform _vehicleSpawnRoot;
         [SerializeField] private Transform _passengerSpawnRoot;
+        [SerializeField] private SoundSO _backgroundMusic;
         [SerializeField] private SoundSO _winSound;
         [SerializeField] private SoundSO _loseSound;
         [SerializeField] private VehicleSelectionController _vehicleSelectionController;
@@ -145,7 +146,7 @@ namespace SCJam.LevelSystem
             BuildPassengerQueue(levelConfig);
 
             _levelState = LevelState.Playing;
-            AudioManager.Instance?.PlayMusic(levelConfig.BackgroundMusic);
+            AudioManager.Instance?.PlayMusic(_backgroundMusic);
 
             LoadLevelQueueRoutine().Forget(HandleQueueSpawnException);
         }
