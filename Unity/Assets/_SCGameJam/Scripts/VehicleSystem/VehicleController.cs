@@ -151,8 +151,8 @@ namespace SCJam.VehicleSystem
         {
             AudioManager.Instance.PlaySound(_fullSound);
 
-            if (_fullParticle != null)
-                _fullParticle.Play();
+            // if (_fullParticle != null)
+            //     _fullParticle.Play();
         }
 
         /// <summary>
