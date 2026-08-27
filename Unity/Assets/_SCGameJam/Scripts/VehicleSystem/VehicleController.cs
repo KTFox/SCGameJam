@@ -42,6 +42,9 @@ namespace SCJam.VehicleSystem
         [SerializeField] private Renderer[] _hintOutlineRenderers;
         [SerializeField] private float _hintOutlineMaxWidth;
         [SerializeField] private float _hintOutlineBlinkDuration;
+        [SerializeField] private float _teleportScaleDownDuration;
+        [SerializeField] private float _teleportScaleUpDuration;
+        [SerializeField] private Ease _teleportScaleEase;
 
 
         // ===== Private Fields ===== //
@@ -197,6 +200,24 @@ namespace SCJam.VehicleSystem
                 BumpAndReverseRoutine().Forget(HandleRoutineException);
         }
 
+        public bool CanTeleportToWaitingSlot()
+        {
+            return !_isMoving && _vehicle.State == VehicleState.Parked;
+        }
+
+        /// <summary>
+        /// Booster move: skips the path/blocked check entirely and drops the vehicle straight into a free
+        /// waiting slot with a scale-down / teleport / scale-up animation. No-ops if the vehicle can't be
+        /// teleported right now or no waiting slot is free.
+        /// </summary>
+        public void RequestTeleportToWaitingSlot()
+        {
+            if (!CanTeleportToWaitingSlot())
+                return;
+
+            TeleportToWaitingSlotRoutine().Forget(HandleRoutineException);
+        }
+
         public bool CanDepart()
         {
             return !_isMoving && _vehicle.State == VehicleState.Full;
@@ -246,6 +267,35 @@ namespace SCJam.VehicleSystem
             await MoveAndFaceRoutine(slotEntryPosition);
 
             await MoveAndFaceRoutine(slotPosition, slotAnchor.rotation);
+
+            _waitingAreaManager.ConfirmOccupied(reservedSlot);
+            _vehicle.ChangeState(VehicleState.Waiting);
+            SetIsMoving(false);
+        }
+
+        private async UniTask TeleportToWaitingSlotRoutine()
+        {
+            if (!_waitingAreaManager.TryReserveSlot(_vehicle.Id, out WaitingSlot reservedSlot))
+                return;
+
+            _reservedSlot = reservedSlot;
+            SetIsMoving(true);
+            // The vehicle vanishes and reappears rather than driving, so the ground dust trail SetIsMoving
+            // starts makes no sense here.
+            SetDustPlaying(false);
+            _vehicle.ChangeState(VehicleState.MovingToExit);
+
+            _boardGrid.RemoveVehicle(_vehicle.Id);
+            _vehicle.ClearFootprint();
+
+            await transform.DOScale(Vector3.zero, _teleportScaleDownDuration).SetEase(_teleportScaleEase)
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
+
+            Transform slotAnchor = _waitingAreaView.GetSlotAnchor(reservedSlot.Index);
+            transform.SetPositionAndRotation(slotAnchor.position, slotAnchor.rotation);
+
+            await transform.DOScale(_originalScale, _teleportScaleUpDuration).SetEase(_teleportScaleEase)
+                .ToUniTask(TweenCancelBehaviour.KillAndCancelAwait, _destroyCancellationToken);
 
             _waitingAreaManager.ConfirmOccupied(reservedSlot);
             _vehicle.ChangeState(VehicleState.Waiting);

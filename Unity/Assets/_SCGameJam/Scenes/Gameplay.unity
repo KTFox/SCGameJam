@@ -1555,6 +1555,7 @@ MonoBehaviour:
   _nextLevelPopupDelay: 1
   _addWaitingSlotCharges: 5
   _hintCharges: 5
+  _teleportVehicleCharges: 5
 --- !u!1 &1826823342
 GameObject:
   m_ObjectHideFlags: 0
@@ -1842,6 +1843,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 607183375131886245, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
+      propertyPath: _levelController
+      value: 
+      objectReference: {fileID: 1682816973}
+    - target: {fileID: 2785707894528410143, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
       propertyPath: _levelController
       value: 
       objectReference: {fileID: 1682816973}
