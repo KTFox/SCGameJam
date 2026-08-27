@@ -65,11 +65,18 @@ namespace SCJam.LevelSystem
 
         public LevelState State => _levelState;
 
+        /// <summary>
+        /// Passengers still waiting in the queue for the current level (those not yet matched to a vehicle).
+        /// Drops by one each time a passenger is dequeued to board, and reaches zero on a win.
+        /// </summary>
+        public int RemainingPassengerCount => _passengerQueue?.Passengers.Count ?? 0;
+
 
         // ===== Events ===== //
 
         public event Action OnLevelCompleted;
         public event Action OnLevelFailed;
+        public event Action<int> RemainingPassengerCountChanged;
 
 
         // ===== Unity Lifecycle Methods ===== //
@@ -144,6 +151,7 @@ namespace SCJam.LevelSystem
             SpawnVehicles(levelConfig);
             BuildPassengerPrefabLookup(levelConfig);
             BuildPassengerQueue(levelConfig);
+            RemainingPassengerCountChanged?.Invoke(RemainingPassengerCount);
 
             _levelState = LevelState.Playing;
             AudioManager.Instance?.PlayMusic(_backgroundMusic);
@@ -310,6 +318,8 @@ namespace SCJam.LevelSystem
             IReadOnlyList<Passenger> boardedPassengers = _boardingResolver.TryBoard(selectedVehicle);
             if (boardedPassengers.Count == 0)
                 return;
+
+            RemainingPassengerCountChanged?.Invoke(RemainingPassengerCount);
 
             VehicleController vehicleController = _vehicleControllersById[selectedVehicle.Id];
             Vector3 queueFrontPosition = _passengerQueueView.GetQueueTransform(0).position;

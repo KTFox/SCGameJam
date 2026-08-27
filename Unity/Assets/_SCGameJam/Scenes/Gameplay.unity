@@ -1839,6 +1839,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4101724198267125207, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
+      propertyPath: _levelController
+      value: 
+      objectReference: {fileID: 1682816973}
     - target: {fileID: 5584649498230913594, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
       propertyPath: m_Name
       value: Canvas - HUD
