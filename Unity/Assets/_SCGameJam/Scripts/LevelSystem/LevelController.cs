@@ -34,6 +34,7 @@ namespace SCJam.LevelSystem
         [SerializeField] private PlayerHandSimulator _playerHandSimulator;
         [SerializeField] private float _queueSpawnStaggerDelay;
         [SerializeField] private float _nextLevelPopupDelay;
+        [SerializeField] private int _addWaitingSlotCharges;
 
 
         // ===== Private Fields ===== //
@@ -60,16 +61,39 @@ namespace SCJam.LevelSystem
         private CancellationTokenSource _queueSpawnCancellationSource;
         private CancellationToken _destroyCancellationToken;
 
+        private int _remainingAddWaitingSlotCharges;
+        private bool _hasInitializedWaitingSlotCharges;
+
 
         // ===== Public Properties ===== //
 
         public LevelState State => _levelState;
+
+        /// <summary>
+        /// Passengers still waiting in the queue for the current level (those not yet matched to a vehicle).
+        /// Drops by one each time a passenger is dequeued to board, and reaches zero on a win.
+        /// </summary>
+        public int RemainingPassengerCount => _passengerQueue?.Passengers.Count ?? 0;
+
+        /// <summary>
+        /// "Add waiting slot" booster uses left. Seeded once from the serialized starting amount and carried
+        /// over between levels (not reset on level load / retry). Zero once every charge has been spent, or
+        /// once the waiting area has grown to the view's maximum slot count.
+        /// </summary>
+        public int RemainingAddWaitingSlotCharges => _remainingAddWaitingSlotCharges;
+
+        public bool CanAddWaitingSlot =>
+            _remainingAddWaitingSlotCharges > 0
+            && _waitingAreaManager != null
+            && _waitingAreaManager.Slots.Count < _waitingAreaView.SlotCount;
 
 
         // ===== Events ===== //
 
         public event Action OnLevelCompleted;
         public event Action OnLevelFailed;
+        public event Action<int> RemainingPassengerCountChanged;
+        public event Action<int> AddWaitingSlotChargesChanged;
 
 
         // ===== Unity Lifecycle Methods ===== //
@@ -144,6 +168,7 @@ namespace SCJam.LevelSystem
             SpawnVehicles(levelConfig);
             BuildPassengerPrefabLookup(levelConfig);
             BuildPassengerQueue(levelConfig);
+            RemainingPassengerCountChanged?.Invoke(RemainingPassengerCount);
 
             _levelState = LevelState.Playing;
             AudioManager.Instance?.PlayMusic(_backgroundMusic);
@@ -151,14 +176,45 @@ namespace SCJam.LevelSystem
             LoadLevelQueueRoutine().Forget(HandleQueueSpawnException);
         }
 
+        /// <summary>
+        /// Spends one "add waiting slot" charge to unlock one more waiting slot for the rest of the run.
+        /// Returns false (and changes nothing) when no charges remain or the waiting area is already at the
+        /// view's maximum slot count.
+        /// </summary>
+        public bool TryAddWaitingSlot()
+        {
+            if (!CanAddWaitingSlot)
+                return false;
+
+            _remainingAddWaitingSlotCharges--;
+
+            _waitingAreaManager.AddSlot();
+            _waitingAreaView.ApplyActiveSlotCount(_waitingAreaManager.Slots.Count, animate: true);
+
+            AddWaitingSlotChargesChanged?.Invoke(_remainingAddWaitingSlotCharges);
+            return true;
+        }
+
         private void BuildBoard(LevelConfig levelConfig)
         {
             _boardGrid = new BoardGrid(levelConfig.BoardSize.x, levelConfig.BoardSize.y);
             _movementResolver = new VehicleMovementResolver(_boardGrid);
-            _waitingAreaManager = new WaitingAreaManager(levelConfig.WaitingSlotCount);
+
+            if (!_hasInitializedWaitingSlotCharges)
+            {
+                _remainingAddWaitingSlotCharges = Mathf.Max(0, _addWaitingSlotCharges);
+                _hasInitializedWaitingSlotCharges = true;
+            }
+
+            // Each level starts from its own configured slot count; booster-added slots do not carry over
+            // between levels (the remaining booster charges do — they are seeded once above).
+            int activeSlotCount = levelConfig.WaitingSlotCount;
+
+            _waitingAreaManager = new WaitingAreaManager(activeSlotCount);
 
             _boardView.Initialize(_boardGrid);
-            _waitingAreaView.ApplyActiveSlotCount(levelConfig.WaitingSlotCount);
+            _waitingAreaView.ApplyActiveSlotCount(activeSlotCount);
+            AddWaitingSlotChargesChanged?.Invoke(_remainingAddWaitingSlotCharges);
         }
 
         private void SpawnVehicles(LevelConfig levelConfig)
@@ -310,6 +366,8 @@ namespace SCJam.LevelSystem
             IReadOnlyList<Passenger> boardedPassengers = _boardingResolver.TryBoard(selectedVehicle);
             if (boardedPassengers.Count == 0)
                 return;
+
+            RemainingPassengerCountChanged?.Invoke(RemainingPassengerCount);
 
             VehicleController vehicleController = _vehicleControllersById[selectedVehicle.Id];
             Vector3 queueFrontPosition = _passengerQueueView.GetQueueTransform(0).position;

@@ -44,5 +44,16 @@ namespace SCJam.WaitingAreaSystem
         public void ConfirmOccupied(WaitingSlot slot) => slot.ConfirmOccupied(_nextArrivalOrder++);
 
         public void ReleaseSlot(WaitingSlot slot) => slot.Release();
+
+        /// <summary>
+        /// Appends one more Available slot at the next index and returns it. Used by the "add waiting slot"
+        /// booster; existing slots (and any vehicles occupying them) are left untouched.
+        /// </summary>
+        public WaitingSlot AddSlot()
+        {
+            WaitingSlot slot = new(_slots.Count);
+            _slots.Add(slot);
+            return slot;
+        }
     }
 }

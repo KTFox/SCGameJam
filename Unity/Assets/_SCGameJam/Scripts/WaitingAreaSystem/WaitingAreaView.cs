@@ -21,7 +21,14 @@ namespace SCJam.WaitingAreaSystem
             return _slotVisuals[slotIndex].transform;
         }
 
-        public void ApplyActiveSlotCount(int activeSlotCount)
+        public void ApplyActiveSlotCount(int activeSlotCount) => ApplyActiveSlotCount(activeSlotCount, false);
+
+        /// <summary>
+        /// Locks/unlocks slot visuals so exactly activeSlotCount of them are active. When animate is true,
+        /// slots whose locked state actually changes play their scale-swap bounce; on level load it is
+        /// false so every slot snaps to its configured state.
+        /// </summary>
+        public void ApplyActiveSlotCount(int activeSlotCount, bool animate)
         {
             if (_slotVisuals == null)
                 return;
@@ -31,7 +38,7 @@ namespace SCJam.WaitingAreaSystem
                 if (_slotVisuals[i] == null)
                     continue;
 
-                _slotVisuals[i].SetLocked(i >= activeSlotCount);
+                _slotVisuals[i].SetLocked(i >= activeSlotCount, animate);
             }
         }
     }
