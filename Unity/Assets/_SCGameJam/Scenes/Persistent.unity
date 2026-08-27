@@ -323,7 +323,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SCJam.Runtime::SCJam.LevelSystem.LevelDatabase
   _levels:
-  - {fileID: 11400000, guid: a12b9a3a866e642909e18a125b85eb73, type: 2}
   - {fileID: 11400000, guid: 7e7225dad728e42808cbeb6178d0c20a, type: 2}
   - {fileID: 11400000, guid: 06bddfcd8b364465f92a3300f973bee3, type: 2}
   - {fileID: 11400000, guid: 4e5ac9b9099e14928ba38a977c5ce33b, type: 2}
@@ -353,6 +352,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e1c5257e9aa364b288178e7afadf3cc1, type: 2}
   - {fileID: 11400000, guid: e370549ee03184171abfae0c79b6c8a7, type: 2}
   - {fileID: 11400000, guid: 40328a203acd8497eb40d63f65942f71, type: 2}
+  - {fileID: 11400000, guid: a12b9a3a866e642909e18a125b85eb73, type: 2}
 --- !u!4 &1248437711
 Transform:
   m_ObjectHideFlags: 0

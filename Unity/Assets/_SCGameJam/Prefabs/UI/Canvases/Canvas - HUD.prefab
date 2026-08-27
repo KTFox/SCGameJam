@@ -860,18 +860,51 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9134231080202198888, guid: f94210c28218e4a8da0ca82b97a82840, type: 3}
       propertyPath: m_Name
-      value: Booster Button (2)
+      value: Extra Slot Button
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 9134231080202198888, guid: f94210c28218e4a8da0ca82b97a82840, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 607183375131886245}
   m_SourcePrefab: {fileID: 100100000, guid: f94210c28218e4a8da0ca82b97a82840, type: 3}
+--- !u!114 &4969542741689061234 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7303539031993039504, guid: f94210c28218e4a8da0ca82b97a82840, type: 3}
+  m_PrefabInstance: {fileID: 2426383323453093346}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!224 &5285656796401395983 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7563322908613287149, guid: f94210c28218e4a8da0ca82b97a82840, type: 3}
   m_PrefabInstance: {fileID: 2426383323453093346}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &6876838315758365322 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9134231080202198888, guid: f94210c28218e4a8da0ca82b97a82840, type: 3}
+  m_PrefabInstance: {fileID: 2426383323453093346}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &607183375131886245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6876838315758365322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 395c2e476a0d4411dab4a733303c7b4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SCJam.Runtime::SCJam.UISystem.AddWaitingSlotButton
+  _levelController: {fileID: 0}
+  _chargeCountText: {fileID: 4969542741689061234}
 --- !u!1001 &5355765156523924440
 PrefabInstance:
   m_ObjectHideFlags: 0

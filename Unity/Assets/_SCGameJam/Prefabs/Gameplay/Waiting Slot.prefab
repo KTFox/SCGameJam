@@ -141,6 +141,11 @@ MonoBehaviour:
   _lockedIcon: {fileID: 756483057061340470}
   _normalColor: {r: 1, g: 1, b: 1, a: 1}
   _lockedColor: {r: 0.6313726, g: 0.6313726, b: 0.6313726, a: 1}
+  _scaleTarget: {fileID: 1178824157656970499}
+  _scaleUpMultiplier: 1.3
+  _scaleUpDuration: 0.1
+  _scaleDownDuration: 0.1
+  _scaleEase: 1
 --- !u!1 &8872206917688842452
 GameObject:
   m_ObjectHideFlags: 0
