@@ -10,6 +10,20 @@ namespace SCJam.WaitingAreaSystem
 
         public IReadOnlyList<WaitingSlot> Slots => _slots;
 
+        public bool HasAvailableSlot
+        {
+            get
+            {
+                foreach (WaitingSlot slot in _slots)
+                {
+                    if (slot.State == WaitingSlotState.Available)
+                        return true;
+                }
+
+                return false;
+            }
+        }
+
 
         public WaitingAreaManager(int slotCount)
         {

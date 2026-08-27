@@ -94,6 +94,9 @@ MonoBehaviour:
   _hintOutlineRenderers: []
   _hintOutlineMaxWidth: 4
   _hintOutlineBlinkDuration: 0.5
+  _teleportScaleDownDuration: 0.2
+  _teleportScaleUpDuration: 0.2
+  _teleportScaleEase: 1
 --- !u!1 &985200949728183731
 GameObject:
   m_ObjectHideFlags: 0

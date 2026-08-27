@@ -22,6 +22,16 @@ namespace SCJam.VehicleSystem
         private CancellationToken _destroyCancellationToken;
 
 
+        // ===== Public Properties ===== //
+
+        /// <summary>
+        /// When true, a tap still resolves the vehicle under the pointer and raises <see cref="VehicleSelected"/>,
+        /// but the controller does not drive that vehicle's normal move request. Used while a booster owns the
+        /// next vehicle tap (e.g. teleport-to-waiting-slot) and handles the vehicle itself.
+        /// </summary>
+        public bool SuppressAutoMove { get; set; }
+
+
         // ===== Events ===== //
 
         public event Action<VehicleController> VehicleSelected;
@@ -61,7 +71,9 @@ namespace SCJam.VehicleSystem
             if (hit.collider.TryGetComponent(out VehicleController vehicleController))
             {
                 VehicleSelected?.Invoke(vehicleController);
-                RequestMoveRoutine(vehicleController).Forget(HandleRoutineException);
+
+                if (!SuppressAutoMove)
+                    RequestMoveRoutine(vehicleController).Forget(HandleRoutineException);
             }
         }
 

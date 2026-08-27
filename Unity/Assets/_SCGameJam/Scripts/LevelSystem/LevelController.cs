@@ -19,6 +19,15 @@ namespace SCJam.LevelSystem
     /// </summary>
     public class LevelController : MonoBehaviour
     {
+        // ===== Constants ===== //
+
+        /// <summary>
+        /// Level index (0-based) that still shows the guide-finger hint automatically on load as a tutorial.
+        /// Every later level requires the player to spend a hint booster charge instead.
+        /// </summary>
+        private const int TUTORIAL_LEVEL_INDEX = 0;
+
+
         // ===== Serialized Fields ===== //
 
         [SerializeField] private BoardView _boardView;
@@ -35,6 +44,8 @@ namespace SCJam.LevelSystem
         [SerializeField] private float _queueSpawnStaggerDelay;
         [SerializeField] private float _nextLevelPopupDelay;
         [SerializeField] private int _addWaitingSlotCharges;
+        [SerializeField] private int _hintCharges;
+        [SerializeField] private int _teleportVehicleCharges;
 
 
         // ===== Private Fields ===== //
@@ -46,6 +57,7 @@ namespace SCJam.LevelSystem
         private readonly Dictionary<int, List<Passenger>> _pendingBoardingByVehicleId = new();
         private readonly List<GameObject> _spawnedGameObjects = new();
         private readonly HashSet<PuzzleColor> _loggedMissingPrefabColors = new();
+        private readonly List<VehicleController> _teleportTargetingHighlights = new();
 
         private LevelState _levelState;
         private BoardGrid _boardGrid;
@@ -63,6 +75,11 @@ namespace SCJam.LevelSystem
 
         private int _remainingAddWaitingSlotCharges;
         private bool _hasInitializedWaitingSlotCharges;
+        private int _remainingHintCharges;
+        private bool _hasInitializedHintCharges;
+        private int _remainingTeleportVehicleCharges;
+        private bool _hasInitializedTeleportVehicleCharges;
+        private bool _isTeleportVehicleTargeting;
 
 
         // ===== Public Properties ===== //
@@ -82,10 +99,42 @@ namespace SCJam.LevelSystem
         /// </summary>
         public int RemainingAddWaitingSlotCharges => _remainingAddWaitingSlotCharges;
 
+        /// <summary>
+        /// True while a booster owns the interaction (currently: the teleport-vehicle booster waiting for the
+        /// player to pick a vehicle). Every booster button is locked out until it clears.
+        /// </summary>
+        public bool IsBoosterInteractionActive => _isTeleportVehicleTargeting;
+
         public bool CanAddWaitingSlot =>
             _remainingAddWaitingSlotCharges > 0
+            && !IsBoosterInteractionActive
             && _waitingAreaManager != null
             && _waitingAreaManager.Slots.Count < _waitingAreaView.SlotCount;
+
+        /// <summary>
+        /// Hint booster uses left. Seeded once from the serialized starting amount and carried over between
+        /// levels (not reset on level load / retry). The tutorial level's automatic hint does not consume a
+        /// charge.
+        /// </summary>
+        public int RemainingHintCharges => _remainingHintCharges;
+
+        public bool CanShowHint =>
+            _remainingHintCharges > 0
+            && _levelState == LevelState.Playing
+            && !IsBoosterInteractionActive;
+
+        /// <summary>
+        /// Teleport-vehicle booster uses left. Seeded once from the serialized starting amount and carried
+        /// over between levels (not reset on level load / retry).
+        /// </summary>
+        public int RemainingTeleportVehicleCharges => _remainingTeleportVehicleCharges;
+
+        public bool CanTeleportVehicle =>
+            _remainingTeleportVehicleCharges > 0
+            && _levelState == LevelState.Playing
+            && !_isTeleportVehicleTargeting
+            && _waitingAreaManager != null
+            && _waitingAreaManager.HasAvailableSlot;
 
 
         // ===== Events ===== //
@@ -94,6 +143,8 @@ namespace SCJam.LevelSystem
         public event Action OnLevelFailed;
         public event Action<int> RemainingPassengerCountChanged;
         public event Action<int> AddWaitingSlotChargesChanged;
+        public event Action<int> HintChargesChanged;
+        public event Action<int> TeleportVehicleChargesChanged;
 
 
         // ===== Unity Lifecycle Methods ===== //
@@ -171,6 +222,11 @@ namespace SCJam.LevelSystem
             RemainingPassengerCountChanged?.Invoke(RemainingPassengerCount);
 
             _levelState = LevelState.Playing;
+
+            // Booster-charge listeners are notified only after the level is in Playing state, since their
+            // "can use" checks gate on it — firing earlier would latch the buttons disabled for the level.
+            NotifyBoosterButtonsChanged();
+
             AudioManager.Instance?.PlayMusic(_backgroundMusic);
 
             LoadLevelQueueRoutine().Forget(HandleQueueSpawnException);
@@ -195,16 +251,121 @@ namespace SCJam.LevelSystem
             return true;
         }
 
-        private void BuildBoard(LevelConfig levelConfig)
+        /// <summary>
+        /// Spends one hint booster charge to show the guide-finger hint at the vehicle the player should tap
+        /// next. Returns false (and changes nothing) when no charges remain, the level is not in play, or
+        /// there is currently no solvable vehicle to point at.
+        /// </summary>
+        public bool TryShowHint()
         {
-            _boardGrid = new BoardGrid(levelConfig.BoardSize.x, levelConfig.BoardSize.y);
-            _movementResolver = new VehicleMovementResolver(_boardGrid);
+            if (!CanShowHint)
+                return false;
 
+            if (!UpdateGuideFinger())
+                return false;
+
+            _remainingHintCharges--;
+            HintChargesChanged?.Invoke(_remainingHintCharges);
+            return true;
+        }
+
+        /// <summary>
+        /// Spends one teleport-vehicle booster charge and enters "pick a vehicle" mode: every parked,
+        /// non-moving vehicle blinks its hint outline, and the next one the player taps is dropped straight
+        /// into a free waiting slot (see <see cref="OnVehicleSelected"/>). The mode cannot be cancelled once
+        /// entered. Returns false (and changes nothing) when the booster is unavailable.
+        /// </summary>
+        public bool TryBeginTeleportVehicleTargeting()
+        {
+            if (!CanTeleportVehicle)
+                return false;
+
+            _remainingTeleportVehicleCharges--;
+            _isTeleportVehicleTargeting = true;
+
+            if (_vehicleSelectionController != null)
+                _vehicleSelectionController.SuppressAutoMove = true;
+
+            _guideFingerController?.Hide();
+            SetHintedVehicle(null);
+            SetTeleportTargetingHighlightsEnabled(true);
+
+            NotifyBoosterButtonsChanged();
+            return true;
+        }
+
+        private void SetTeleportTargetingHighlightsEnabled(bool isEnabled)
+        {
+            foreach (VehicleController controller in _teleportTargetingHighlights)
+            {
+                if (controller != null)
+                    controller.SetHintOutlineEnabled(false);
+            }
+
+            _teleportTargetingHighlights.Clear();
+
+            if (!isEnabled)
+                return;
+
+            foreach (VehicleController controller in _vehicleControllersById.Values)
+            {
+                if (!controller.CanTeleportToWaitingSlot())
+                    continue;
+
+                controller.SetHintOutlineEnabled(true);
+                _teleportTargetingHighlights.Add(controller);
+            }
+        }
+
+        private void EndTeleportVehicleTargeting()
+        {
+            _isTeleportVehicleTargeting = false;
+            SetTeleportTargetingHighlightsEnabled(false);
+
+            if (_vehicleSelectionController != null)
+                _vehicleSelectionController.SuppressAutoMove = false;
+
+            NotifyBoosterButtonsChanged();
+        }
+
+        /// <summary>
+        /// Re-broadcasts every booster's charge count so its button re-evaluates its interactable state.
+        /// Used whenever <see cref="IsBoosterInteractionActive"/> flips, since that gates all of them.
+        /// </summary>
+        private void NotifyBoosterButtonsChanged()
+        {
+            AddWaitingSlotChargesChanged?.Invoke(_remainingAddWaitingSlotCharges);
+            HintChargesChanged?.Invoke(_remainingHintCharges);
+            TeleportVehicleChargesChanged?.Invoke(_remainingTeleportVehicleCharges);
+        }
+
+        private void InitializeBoosterChargesOnce()
+        {
             if (!_hasInitializedWaitingSlotCharges)
             {
                 _remainingAddWaitingSlotCharges = Mathf.Max(0, _addWaitingSlotCharges);
                 _hasInitializedWaitingSlotCharges = true;
             }
+
+            if (!_hasInitializedHintCharges)
+            {
+                _remainingHintCharges = Mathf.Max(0, _hintCharges);
+                _hasInitializedHintCharges = true;
+            }
+
+            if (!_hasInitializedTeleportVehicleCharges)
+            {
+                _remainingTeleportVehicleCharges = Mathf.Max(0, _teleportVehicleCharges);
+                _hasInitializedTeleportVehicleCharges = true;
+            }
+        }
+
+        private void BuildBoard(LevelConfig levelConfig)
+        {
+            _boardGrid = new BoardGrid(levelConfig.BoardSize.x, levelConfig.BoardSize.y);
+            _movementResolver = new VehicleMovementResolver(_boardGrid);
+
+            InitializeBoosterChargesOnce();
 
             // Each level starts from its own configured slot count; booster-added slots do not carry over
             // between levels (the remaining booster charges do — they are seeded once above).
@@ -214,7 +375,6 @@ namespace SCJam.LevelSystem
 
             _boardView.Initialize(_boardGrid);
             _waitingAreaView.ApplyActiveSlotCount(activeSlotCount);
-            AddWaitingSlotChargesChanged?.Invoke(_remainingAddWaitingSlotCharges);
         }
 
         private void SpawnVehicles(LevelConfig levelConfig)
@@ -281,26 +441,28 @@ namespace SCJam.LevelSystem
         }
 
         /// <summary>
-        /// Onboarding hint shown at the start of every level: points at the parked vehicle the player
-        /// should tap first, i.e. the one matching the front passenger group's color with a clear path to
-        /// the exit. Hidden again as soon as the player taps any vehicle.
+        /// Points the guide finger at the parked vehicle the player should tap next, i.e. the one matching
+        /// the front passenger group's color with a clear path to the exit. Shown automatically on the
+        /// tutorial level and on demand via the hint booster on every later level; hidden again as soon as
+        /// the player taps any vehicle. Returns true when a target was found and the hint is now visible.
         /// </summary>
-        private void UpdateGuideFinger()
+        private bool UpdateGuideFinger()
         {
             SetHintedVehicle(null);
 
             if (_guideFingerController == null)
-                return;
+                return false;
 
             VehicleController targetVehicleController = FindSolvableVehicleController();
             if (targetVehicleController == null)
             {
                 _guideFingerController.Hide();
-                return;
+                return false;
             }
 
             _guideFingerController.Show(targetVehicleController.transform);
             SetHintedVehicle(targetVehicleController);
+            return true;
         }
 
         private void SetHintedVehicle(VehicleController vehicleController)
@@ -667,6 +829,18 @@ namespace SCJam.LevelSystem
 
         private void OnVehicleSelected(VehicleController vehicleController)
         {
+            if (_isTeleportVehicleTargeting)
+            {
+                // Non-cancellable mode: ignore taps on vehicles that can't be teleported and stay armed
+                // until the player picks a valid one.
+                if (vehicleController == null || !vehicleController.CanTeleportToWaitingSlot())
+                    return;
+
+                EndTeleportVehicleTargeting();
+                vehicleController.RequestTeleportToWaitingSlot();
+                return;
+            }
+
             _guideFingerController?.Hide();
             SetHintedVehicle(null);
         }
@@ -675,9 +849,10 @@ namespace SCJam.LevelSystem
         /// Initial spawn/layout of the passenger queue on level load: passengers spawn one at a time at the
         /// back-most (last) queue pivot and walk forward into their target slot, instead of appearing
         /// instantly at their final anchor. Boarding naturally waits for the front slot to settle via
-        /// PassengerController.IsSettledAtQueueFront, so no extra gating is needed here. The guide finger
-        /// hint is shown only after this spawn-in finishes, so it never appears while passengers are
-        /// still walking into the queue.
+        /// PassengerController.IsSettledAtQueueFront, so no extra gating is needed here. On the tutorial
+        /// level the guide finger hint is shown automatically once this spawn-in finishes (so it never
+        /// appears while passengers are still walking in); later levels leave it hidden until the player
+        /// spends a hint booster charge.
         /// </summary>
         private async UniTask LoadLevelQueueRoutine()
         {
@@ -689,7 +864,13 @@ namespace SCJam.LevelSystem
 
             await SpawnQueueRoutine(visibleCount, _queueSpawnCancellationSource.Token);
 
-            UpdateGuideFinger();
+            if (IsTutorialLevel())
+                UpdateGuideFinger();
+        }
+
+        private static bool IsTutorialLevel()
+        {
+            return LevelDatabase.Instance != null && LevelDatabase.Instance.CurrentLevelIndex == TUTORIAL_LEVEL_INDEX;
         }
 
         private async UniTask SpawnQueueRoutine(int visibleCount, CancellationToken cancellationToken)
@@ -770,6 +951,11 @@ namespace SCJam.LevelSystem
         private void ClearLevel()
         {
             _playerHandSimulator?.Hide();
+            _guideFingerController?.Hide();
+            SetHintedVehicle(null);
+
+            if (_isTeleportVehicleTargeting)
+                EndTeleportVehicleTargeting();
 
             foreach (GameObject spawned in _spawnedGameObjects)
             {
