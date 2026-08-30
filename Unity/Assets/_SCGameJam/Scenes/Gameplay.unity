@@ -1842,6 +1842,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 209234363697420934, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
+      propertyPath: _levelController
+      value: 
+      objectReference: {fileID: 1682816973}
     - target: {fileID: 607183375131886245, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
       propertyPath: _levelController
       value: 
@@ -1862,6 +1866,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Canvas - HUD
       objectReference: {fileID: 0}
+    - target: {fileID: 5693893758405541183, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
+      propertyPath: _levelController
+      value: 
+      objectReference: {fileID: 1682816973}
+    - target: {fileID: 6660819861999122780, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
+      propertyPath: _levelController
+      value: 
+      objectReference: {fileID: 1682816973}
     - target: {fileID: 8121324965012680617, guid: 0b5c6f5bace924883a714c0cbd1d784e, type: 3}
       propertyPath: m_Pivot.x
       value: 0
