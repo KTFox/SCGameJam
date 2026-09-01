@@ -10,6 +10,7 @@ namespace SCJam.Common
         Green,
         Brown,
         Black,
-        Blue
+        Blue,
+        Red
     }
 }

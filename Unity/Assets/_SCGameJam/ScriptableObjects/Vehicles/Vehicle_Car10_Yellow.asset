@@ -15,4 +15,4 @@ MonoBehaviour:
   _color: 3
   _capacity: 10
   _footprintSize: {x: 1, y: 4}
-  _vehicleModel: {fileID: 1176110094894038664, guid: 39d13d40652f74d42a971ef516d822b8, type: 3}
+  _vehicleModel: {fileID: 1176110094894038664, guid: 4925dcf27114b49ef8f0ae8d2ba91535, type: 3}
