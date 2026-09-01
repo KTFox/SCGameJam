@@ -15,37 +15,37 @@ MonoBehaviour:
   _boardSize: {x: 6, y: 6}
   _waitingSlotCount: 3
   _vehiclePlacements:
-  - _vehicleConfig: {fileID: 11400000, guid: ff78025ead3ec4d0ab6731b488eb1330, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 4bfc4c7d79f740d59d504d2831ef7587, type: 2}
     _originCell: {x: 0, y: 1}
     _movementDirection: 0
-  - _vehicleConfig: {fileID: 11400000, guid: 5f35bae432379429d95437be386a2f8a, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 6cd22f16af8f642c2b9e31b686f5bcbb, type: 2}
     _originCell: {x: 0, y: 4}
     _movementDirection: 0
-  - _vehicleConfig: {fileID: 11400000, guid: 507fe98388af467f92f85c230abc7f48, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 1cd5958388d54b18b281a0426bfcabcf, type: 2}
     _originCell: {x: 3, y: 3}
     _movementDirection: 0
-  - _vehicleConfig: {fileID: 11400000, guid: 0d62b675f3bc4092a1a2a31a1dccf633, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 7775b602801c4965910f0c366a6b83ee, type: 2}
     _originCell: {x: 1, y: 2}
     _movementDirection: 1
-  - _vehicleConfig: {fileID: 11400000, guid: 84c6608d0bf6943b79ece3158edeb1c0, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: ff78025ead3ec4d0ab6731b488eb1330, type: 2}
     _originCell: {x: 0, y: 0}
     _movementDirection: 3
-  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 88dbd2816e0a449d8e1184b961a161c0, type: 2}
     _originCell: {x: 2, y: 1}
     _movementDirection: 3
   - _vehicleConfig: {fileID: 11400000, guid: e014121f49e04af1887b9b80ecb3a23f, type: 2}
     _originCell: {x: 3, y: 2}
     _movementDirection: 3
-  - _vehicleConfig: {fileID: 11400000, guid: 429ada450c2d49c5ac45b5d3667cf829, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 6cd22f16af8f642c2b9e31b686f5bcbb, type: 2}
     _originCell: {x: 2, y: 4}
     _movementDirection: 0
   _passengerPrefabMappings:
-  - _color: 1
-    _prefab: {fileID: 3537369575937337948, guid: df32b9fa6f3f24b2eb750f726397deaf, type: 3}
-  - _color: 3
-    _prefab: {fileID: 3537369575937337948, guid: 34fc672d64fd5479b96f0040e11e9444, type: 3}
+  - _color: 4
+    _prefab: {fileID: 3537369575937337948, guid: cc4106c71d55a47d686d5c104fb20ae7, type: 3}
   - _color: 5
     _prefab: {fileID: 3537369575937337948, guid: d01acf461a1c34cfe8843e511ecfc780, type: 3}
-  - _color: 8
-    _prefab: {fileID: 3537369575937337948, guid: fcddcde32a541477e8d1bb63ab4734b8, type: 3}
-  _passengerColorSequence: 01000000080000000800000001000000010000000100000008000000080000000100000008000000010000000100000008000000010000000100000001000000030000000300000005000000050000000300000005000000050000000300000003000000030000000300000003000000030000000300000003000000030000000300000003000000030000000300000005000000080000000500000005000000080000000500000005000000080000000800000005000000
+  - _color: 6
+    _prefab: {fileID: 3537369575937337948, guid: bb73f306f572a4576b6082736ad32aad, type: 3}
+  - _color: 9
+    _prefab: {fileID: 3537369575937337948, guid: 34fc672d64fd5479b96f0040e11e9444, type: 3}
+  _passengerColorSequence: 09000000060000000900000009000000060000000900000006000000060000000900000009000000090000000600000009000000090000000900000006000000040000000600000004000000060000000400000004000000040000000600000006000000040000000400000004000000060000000600000006000000040000000600000004000000060000000600000005000000090000000900000009000000050000000500000009000000050000000500000005000000

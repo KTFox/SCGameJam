@@ -15,28 +15,26 @@ MonoBehaviour:
   _boardSize: {x: 6, y: 6}
   _waitingSlotCount: 3
   _vehiclePlacements:
-  - _vehicleConfig: {fileID: 11400000, guid: ff78025ead3ec4d0ab6731b488eb1330, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: e014121f49e04af1887b9b80ecb3a23f, type: 2}
     _originCell: {x: 4, y: 1}
     _movementDirection: 1
   - _vehicleConfig: {fileID: 11400000, guid: 0d62b675f3bc4092a1a2a31a1dccf633, type: 2}
     _originCell: {x: 3, y: 0}
     _movementDirection: 3
-  - _vehicleConfig: {fileID: 11400000, guid: 507fe98388af467f92f85c230abc7f48, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 4bfc4c7d79f740d59d504d2831ef7587, type: 2}
     _originCell: {x: 2, y: 1}
     _movementDirection: 0
-  - _vehicleConfig: {fileID: 11400000, guid: 9fadb6931e1540d7a8ae3b6b98d2da0a, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 337b6956326249dda9f757e0a9be069c, type: 2}
     _originCell: {x: 1, y: 5}
     _movementDirection: 3
-  - _vehicleConfig: {fileID: 11400000, guid: 84c6608d0bf6943b79ece3158edeb1c0, type: 2}
+  - _vehicleConfig: {fileID: 11400000, guid: 507fe98388af467f92f85c230abc7f48, type: 2}
     _originCell: {x: 2, y: 4}
     _movementDirection: 2
   _passengerPrefabMappings:
-  - _color: 3
-    _prefab: {fileID: 3537369575937337948, guid: 34fc672d64fd5479b96f0040e11e9444, type: 3}
+  - _color: 4
+    _prefab: {fileID: 3537369575937337948, guid: cc4106c71d55a47d686d5c104fb20ae7, type: 3}
   - _color: 5
     _prefab: {fileID: 3537369575937337948, guid: d01acf461a1c34cfe8843e511ecfc780, type: 3}
   - _color: 8
     _prefab: {fileID: 3537369575937337948, guid: fcddcde32a541477e8d1bb63ab4734b8, type: 3}
-  - _color: 9
-    _prefab: {fileID: 0}
-  _passengerColorSequence: 0500000003000000010000000100000001000000050000000500000005000000030000000300000003000000010000000300000003000000010000000300000001000000030000000300000003000000030000000800000008000000080000000300000003000000080000000300000008000000080000000300000003000000
+  _passengerColorSequence: 0500000005000000050000000800000008000000080000000500000005000000050000000800000008000000080000000500000005000000050000000500000005000000050000000500000005000000050000000500000004000000040000000500000005000000040000000500000004000000040000000400000005000000
