@@ -55,14 +55,14 @@ PrefabInstance:
     - target: {fileID: 2902208855063015025, guid: 1a4c808048cb84d5881533dc433c00c6, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: bc1894c39ae954eae8d59fccf1bb3e58, type: 2}
+      objectReference: {fileID: 2100000, guid: 1443238a7dacd804787be31c6ed09bc1, type: 2}
     - target: {fileID: 2902208855063015025, guid: 1a4c808048cb84d5881533dc433c00c6, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
       objectReference: {fileID: 2100000, guid: d315786ff8430ff4f99c5101e7745616, type: 2}
     - target: {fileID: 7499128343092902951, guid: 1a4c808048cb84d5881533dc433c00c6, type: 3}
       propertyPath: m_Name
-      value: Car_10Slots_Pink
+      value: Car_10Slots_Yellow
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
